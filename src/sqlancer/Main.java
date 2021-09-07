@@ -37,6 +37,7 @@ import sqlancer.mysql.MySQLProvider;
 import sqlancer.postgres.PostgresProvider;
 import sqlancer.sqlite3.SQLite3Provider;
 import sqlancer.tidb.TiDBProvider;
+import sqlancer.yugabyte.YugabyteProvider;
 
 public final class Main {
 
@@ -553,6 +554,7 @@ public final class Main {
         providers.add(new MariaDBProvider());
         providers.add(new TiDBProvider());
         providers.add(new PostgresProvider());
+        providers.add(new YugabyteProvider());
         providers.add(new CitusProvider());
         providers.add(new ClickHouseProvider());
         providers.add(new DuckDBProvider());
