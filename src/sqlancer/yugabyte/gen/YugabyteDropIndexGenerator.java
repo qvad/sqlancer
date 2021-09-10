@@ -20,23 +20,13 @@ public final class YugabyteDropIndexGenerator {
         sb.append("DROP INDEX ");
         if (Randomly.getBoolean() || indexes.isEmpty()) {
             sb.append("IF EXISTS ");
-            for (int i = 0; i < Randomly.smallNumber() + 1; i++) {
-                if (i != 0) {
-                    sb.append(", ");
-                }
-                if (indexes.isEmpty() || Randomly.getBoolean()) {
-                    sb.append(DBMSCommon.createIndexName(Randomly.smallNumber()));
-                } else {
-                    sb.append(Randomly.fromList(indexes).getIndexName());
-                }
-            }
-        } else {
-            for (int i = 0; i < Randomly.smallNumber() + 1; i++) {
-                if (i != 0) {
-                    sb.append(", ");
-                }
+            if (indexes.isEmpty() || Randomly.getBoolean()) {
+                sb.append(DBMSCommon.createIndexName(Randomly.smallNumber()));
+            } else {
                 sb.append(Randomly.fromList(indexes).getIndexName());
             }
+        } else {
+            sb.append(Randomly.fromList(indexes).getIndexName());
         }
         if (Randomly.getBoolean()) {
             sb.append(" ");

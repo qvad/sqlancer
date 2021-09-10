@@ -6,6 +6,7 @@ import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.ast.YugabyteAggregate.YugabyteAggregateFunction;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,23 +23,23 @@ public class YugabyteAggregate extends FunctionNode<YugabyteAggregateFunction, Y
         // STRING_AGG
         SUM(YugabyteDataType.INT, YugabyteDataType.FLOAT, YugabyteDataType.REAL, YugabyteDataType.DECIMAL);
 
-        private YugabyteDataType[] supportedReturnTypes;
+        private final YugabyteDataType[] supportedReturnTypes;
 
         YugabyteAggregateFunction(YugabyteDataType... supportedReturnTypes) {
             this.supportedReturnTypes = supportedReturnTypes.clone();
         }
 
         public List<YugabyteDataType> getTypes(YugabyteDataType returnType) {
-            return Arrays.asList(returnType);
+            return Collections.singletonList(returnType);
         }
 
         public boolean supportsReturnType(YugabyteDataType returnType) {
-            return Arrays.asList(supportedReturnTypes).stream().anyMatch(t -> t == returnType)
+            return Arrays.stream(supportedReturnTypes).anyMatch(t -> t == returnType)
                     || supportedReturnTypes.length == 0;
         }
 
         public static List<YugabyteAggregateFunction> getAggregates(YugabyteDataType type) {
-            return Arrays.asList(values()).stream().filter(p -> p.supportsReturnType(type))
+            return Arrays.stream(values()).filter(p -> p.supportsReturnType(type))
                     .collect(Collectors.toList());
         }
 

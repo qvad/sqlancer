@@ -131,12 +131,6 @@ public final class YugabyteExpectedValueVisitor implements YugabyteVisitor {
     }
 
     @Override
-    public void visit(YugabyteCollate op) {
-        print(op);
-        visit(op.getExpr());
-    }
-
-    @Override
     public void visit(YugabyteFromTable from) {
         print(from);
     }

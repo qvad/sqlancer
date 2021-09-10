@@ -246,10 +246,6 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
     public void visit(YugabyteBetweenOperation op) {
         sb.append("(");
         visit(op.getExpr());
-        if (YugabyteProvider.generateOnlyKnown && op.getExpr().getExpressionType() == YugabyteDataType.TEXT
-                && op.getLeft().getExpressionType() == YugabyteDataType.TEXT) {
-            sb.append(" COLLATE \"C\"");
-        }
         sb.append(") BETWEEN ");
         if (op.isSymmetric()) {
             sb.append("SYMMETRIC ");
@@ -258,10 +254,6 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
         visit(op.getLeft());
         sb.append(") AND (");
         visit(op.getRight());
-        if (YugabyteProvider.generateOnlyKnown && op.getExpr().getExpressionType() == YugabyteDataType.TEXT
-                && op.getRight().getExpressionType() == YugabyteDataType.TEXT) {
-            sb.append(" COLLATE \"C\"");
-        }
         sb.append(")");
     }
 
@@ -309,17 +301,6 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
         visit(op.getString());
         sb.append(op.getOp().getStringRepresentation());
         visit(op.getRegex());
-    }
-
-    @Override
-    public void visit(YugabyteCollate op) {
-        sb.append("(");
-        visit(op.getExpr());
-        sb.append(" COLLATE ");
-        sb.append('"');
-        sb.append(op.getCollate());
-        sb.append('"');
-        sb.append(")");
     }
 
     @Override

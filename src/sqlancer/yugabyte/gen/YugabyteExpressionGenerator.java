@@ -204,10 +204,6 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
     private YugabyteExpression getComparison(YugabyteExpression leftExpr, YugabyteExpression rightExpr) {
         YugabyteBinaryComparisonOperation op = new YugabyteBinaryComparisonOperation(leftExpr, rightExpr,
                 YugabyteBinaryComparisonOperation.YugabyteBinaryComparisonOperator.getRandom());
-        if (YugabyteProvider.generateOnlyKnown && op.getLeft().getExpressionType() == YugabyteDataType.TEXT
-                && op.getRight().getExpressionType() == YugabyteDataType.TEXT) {
-            return new YugabyteCollate(op, "C");
-        }
         return op;
     }
 
@@ -233,19 +229,7 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
         if (dataType == YugabyteDataType.FLOAT && Randomly.getBoolean()) {
             dataType = YugabyteDataType.INT;
         }
-        if (!filterColumns(dataType).isEmpty() && Randomly.getBoolean()) {
-            return potentiallyWrapInCollate(dataType, createColumnOfType(dataType));
-        }
-        YugabyteExpression exprInternal = generateExpressionInternal(depth, dataType);
-        return potentiallyWrapInCollate(dataType, exprInternal);
-    }
-
-    private YugabyteExpression potentiallyWrapInCollate(YugabyteDataType dataType, YugabyteExpression exprInternal) {
-        if (dataType == YugabyteDataType.TEXT && YugabyteProvider.generateOnlyKnown) {
-            return new YugabyteCollate(exprInternal, "C");
-        } else {
-            return exprInternal;
-        }
+        return generateExpressionInternal(depth, dataType);
     }
 
     private YugabyteExpression generateExpressionInternal(int depth, YugabyteDataType dataType) throws AssertionError {
@@ -342,18 +326,12 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
     }
 
     private enum TextExpression {
-        CAST, FUNCTION, CONCAT, COLLATE
+        CAST, FUNCTION, CONCAT
     }
 
     private YugabyteExpression generateTextExpression(int depth) {
         TextExpression option;
         List<TextExpression> validOptions = new ArrayList<>(Arrays.asList(TextExpression.values()));
-        if (expectedResult) {
-            validOptions.remove(TextExpression.COLLATE);
-        }
-        if (!globalState.getDbmsSpecificOptions().testCollations) {
-            validOptions.remove(TextExpression.COLLATE);
-        }
         option = Randomly.fromList(validOptions);
 
         switch (option) {
@@ -363,10 +341,6 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
             return generateFunction(depth + 1, YugabyteDataType.TEXT);
         case CONCAT:
             return generateConcat(depth);
-        case COLLATE:
-            assert !expectedResult;
-            return new YugabyteCollate(generateExpression(depth + 1, YugabyteDataType.TEXT), globalState == null
-                    ? Randomly.fromOptions("C", "POSIX", "de_CH.utf8", "es_CR.utf8") : globalState.getRandomCollate());
         default:
             throw new AssertionError();
         }

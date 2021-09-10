@@ -35,6 +35,7 @@ public final class YugabyteCommon {
     }
 
     public static void addCommonTableErrors(ExpectedErrors errors) {
+        errors.add("PRIMARY KEY containing column of type 'INT4RANGE' not yet supported"); // todo
         errors.add("is not commutative"); // exclude
         errors.add("operator requires run-time type coercion"); // exclude
     }
@@ -43,6 +44,7 @@ public final class YugabyteCommon {
         errors.add("You might need to add explicit type casts");
         errors.add("invalid regular expression");
         errors.add("could not determine which collation to use");
+        errors.add("invalid input syntax for integer");
         errors.add("invalid regular expression");
         errors.add("operator does not exist");
         errors.add("quantifier operand invalid");
@@ -59,7 +61,6 @@ public final class YugabyteCommon {
         errors.add("invalid input syntax for type");
         errors.add("cannot cast type");
         errors.add("value overflows numeric format");
-        errors.add("LIKE pattern must not end with escape character");
         errors.add("is of type boolean but expression is of type text");
         errors.add("a negative number raised to a non-integer power yields a complex result");
         errors.add("could not determine polymorphic type because input has type unknown");
@@ -150,12 +151,6 @@ public final class YugabyteCommon {
                 sb.append(")");
             } else {
                 sb.append("name");
-            }
-            if (Randomly.getBoolean() && !YugabyteProvider.generateOnlyKnown) {
-                sb.append(" COLLATE ");
-                sb.append('"');
-                sb.append(Randomly.fromList(opClasses));
-                sb.append('"');
             }
             break;
         case DECIMAL:

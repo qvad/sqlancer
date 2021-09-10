@@ -16,7 +16,7 @@ public class YugabyteBinaryArithmeticOperation extends BinaryOperatorNode<Yugaby
         ADDITION("+") {
             @Override
             public YugabyteConstant apply(YugabyteConstant left, YugabyteConstant right) {
-                return applyBitOperation(left, right, (l, r) -> l + r);
+                return applyBitOperation(left, right, Long::sum);
             }
 
         },

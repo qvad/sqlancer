@@ -44,10 +44,8 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
     }
 
     public enum Action implements AbstractAction<YugabyteGlobalState> {
-        ANALYZE(YugabyteAnalyzeGenerator::create), //
         ALTER_TABLE(g -> YugabyteAlterTableGenerator.create(g.getSchema().getRandomTable(t -> !t.isView()), g,
                 generateOnlyKnown)), //
-        CLUSTER(YugabyteClusterGenerator::create), //
         COMMIT(g -> {
             SQLQueryAdapter query;
             if (Randomly.getBoolean()) {
@@ -59,8 +57,6 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
             }
             return query;
         }), //
-        CREATE_STATISTICS(YugabyteStatisticsGenerator::insert), //
-        DROP_STATISTICS(YugabyteStatisticsGenerator::remove), //
         DELETE(YugabyteDeleteGenerator::create), //
         DISCARD(YugabyteDiscardGenerator::create), //
         DROP_INDEX(YugabyteDropIndexGenerator::create), //
@@ -68,9 +64,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         UPDATE(YugabyteUpdateGenerator::create), //
         TRUNCATE(YugabyteTruncateGenerator::create), //
         VACUUM(YugabyteVacuumGenerator::create), //
-        REINDEX(YugabyteReindexGenerator::create), //
         SET(YugabyteSetGenerator::create), //
-        CREATE_INDEX(YugabyteIndexGenerator::generate), //
         SET_CONSTRAINTS((g) -> {
             StringBuilder sb = new StringBuilder();
             sb.append("SET CONSTRAINTS ALL ");
@@ -105,13 +99,6 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         Randomly r = globalState.getRandomly();
         int nrPerformed;
         switch (a) {
-        case CREATE_INDEX:
-        case CLUSTER:
-            nrPerformed = r.getInteger(0, 3);
-            break;
-        case CREATE_STATISTICS:
-            nrPerformed = r.getInteger(0, 5);
-            break;
         case DISCARD:
         case DROP_INDEX:
             nrPerformed = r.getInteger(0, 5);
@@ -122,7 +109,6 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         case ALTER_TABLE:
             nrPerformed = r.getInteger(0, 5);
             break;
-        case REINDEX:
         case RESET:
             nrPerformed = r.getInteger(0, 3);
             break;
@@ -131,9 +117,6 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         case SET:
             nrPerformed = r.getInteger(0, 5);
             break;
-        case ANALYZE:
-            nrPerformed = r.getInteger(0, 3);
-            break;
         case VACUUM:
         case SET_CONSTRAINTS:
         case COMMENT_ON:
@@ -141,7 +124,6 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         case LISTEN:
         case UNLISTEN:
         case CREATE_SEQUENCE:
-        case DROP_STATISTICS:
         case TRUNCATE:
             nrPerformed = r.getInteger(0, 2);
             break;

@@ -37,8 +37,6 @@ public interface YugabyteVisitor {
 
     void visit(YugabyteSimilarTo op);
 
-    void visit(YugabyteCollate op);
-
     void visit(YugabytePOSIXRegularExpression op);
 
     void visit(YugabyteFromTable from);
@@ -76,8 +74,6 @@ public interface YugabyteVisitor {
             visit((YugabyteSimilarTo) expression);
         } else if (expression instanceof YugabytePOSIXRegularExpression) {
             visit((YugabytePOSIXRegularExpression) expression);
-        } else if (expression instanceof YugabyteCollate) {
-            visit((YugabyteCollate) expression);
         } else if (expression instanceof YugabyteFromTable) {
             visit((YugabyteFromTable) expression);
         } else if (expression instanceof YugabyteSubquery) {

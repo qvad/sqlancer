@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -104,7 +105,7 @@ public class YugabyteNoRECOracle extends NoRECBase<YugabyteGlobalState> implemen
         YugabyteCastOperation isTrue = new YugabyteCastOperation(randomWhereCondition,
                 YugabyteCompoundDataType.create(YugabyteDataType.INT));
         YugabytePostfixText asText = new YugabytePostfixText(isTrue, " as count", null, YugabyteDataType.INT);
-        select.setFetchColumns(Arrays.asList(asText));
+        select.setFetchColumns(Collections.singletonList(asText));
         select.setFromList(fromTables);
         select.setSelectType(SelectType.ALL);
         select.setJoinClauses(joinStatements);

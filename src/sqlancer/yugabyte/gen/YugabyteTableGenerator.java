@@ -137,7 +137,6 @@ public class YugabyteTableGenerator {
         sb.append("(");
         errors.add("unrecognized parameter");
         errors.add("cannot use constant expression");
-        errors.add("cannot add NO INHERIT constraint to partitioned table");
         errors.add("unrecognized parameter");
         errors.add("unsupported PRIMARY KEY constraint with partition key definition");
         errors.add("which is part of the partition key.");
