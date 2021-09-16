@@ -7,7 +7,7 @@ import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 import sqlancer.yugabyte.YugabyteGlobalState;
 
 /**
- * @see <a href="https://www.Yugabyteql.org/docs/devel/sql-comment.html">COMMENT</a>
+ * @see <a href="https://www.postgresql.org/docs/devel/sql-comment.html">COMMENT</a>
  */
 public final class YugabyteCommentGenerator {
 

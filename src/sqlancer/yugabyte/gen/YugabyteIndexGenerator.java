@@ -33,7 +33,7 @@ public final class YugabyteIndexGenerator {
         }
         sb.append(" INDEX ");
         /*
-         * Commented out as a workaround for https://www.Yugabyteql.org/message-id/CA%2Bu7OA4XYhc-
+         * Commented out as a workaround for https://www.postgresql.org/message-id/CA%2Bu7OA4XYhc-
          * qyCgJqwwgMGZDWAyeH821oa5oMzm_HEifZ4BeA%40mail.gmail.com
          */
         // if (Randomly.getBoolean()) {

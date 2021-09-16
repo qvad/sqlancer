@@ -64,17 +64,15 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         UPDATE(YugabyteUpdateGenerator::create), //
         TRUNCATE(YugabyteTruncateGenerator::create), //
         VACUUM(YugabyteVacuumGenerator::create), //
-        SET(YugabyteSetGenerator::create), //
+//        SET(YugabyteSetGenerator::create), // TODO insert yugabyte sets
         SET_CONSTRAINTS((g) -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SET CONSTRAINTS ALL ");
-            sb.append(Randomly.fromOptions("DEFERRED", "IMMEDIATE"));
-            return new SQLQueryAdapter(sb.toString());
+            String sb = "SET CONSTRAINTS ALL " + Randomly.fromOptions("DEFERRED", "IMMEDIATE");
+            return new SQLQueryAdapter(sb);
         }), //
         RESET_ROLE((g) -> new SQLQueryAdapter("RESET ROLE")), //
         COMMENT_ON(YugabyteCommentGenerator::generate), //
         RESET((g) -> new SQLQueryAdapter("RESET ALL") /*
-                                                       * https://www.Yugabyteql.org/docs/devel/sql-reset.html TODO: also
+                                                       * https://www.postgres.org/docs/devel/sql-reset.html TODO: also
                                                        * configuration parameter
                                                        */), //
         NOTIFY(YugabyteNotifyGenerator::createNotify), //
@@ -114,9 +112,6 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
             break;
         case DELETE:
         case RESET_ROLE:
-        case SET:
-            nrPerformed = r.getInteger(0, 5);
-            break;
         case VACUUM:
         case SET_CONSTRAINTS:
         case COMMENT_ON:
@@ -161,12 +156,8 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         password = globalState.getOptions().getPassword();
         host = globalState.getOptions().getHost();
         port = globalState.getOptions().getPort();
-        entryPath = "/test";
+        entryPath = "/yugabyte";
         entryURL = globalState.getDbmsSpecificOptions().connectionURL;
-        // trim URL to exclude "jdbc:"
-        if (entryURL.startsWith("jdbc:")) {
-            entryURL = entryURL.substring(5);
-        }
         String entryDatabaseName = entryPath.substring(1);
         databaseName = globalState.getDatabaseName();
 
@@ -198,11 +189,25 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
             if (port == MainOptions.NO_SET_PORT) {
                 port = uri.getPort();
             }
-            entryURL = String.format("%s://%s:%d/%s", uri.getScheme(), host, port, entryDatabaseName);
+            entryURL = String.format("jdbc:postgresql://%s:%d/%s", host, port, entryDatabaseName);
         } catch (URISyntaxException e) {
             throw new AssertionError(e);
         }
-        Connection con = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5433/yugabyte?user=yugabyte&password=yugabyte");
+
+        createDatabaseSync(globalState, entryDatabaseName);
+
+        int databaseIndex = entryURL.indexOf(entryDatabaseName);
+        String preDatabaseName = entryURL.substring(0, databaseIndex);
+        String postDatabaseName = entryURL.substring(databaseIndex + entryDatabaseName.length());
+        testURL = preDatabaseName + databaseName + postDatabaseName;
+        globalState.getState().logStatement(String.format("\\c %s;", databaseName));
+
+        return new SQLConnection(createConnectionSafely(testURL, username, password));
+    }
+
+    // for some reason yugabyte unable to create few databases simultaneously
+    private synchronized void createDatabaseSync(YugabyteGlobalState globalState, String entryDatabaseName) throws SQLException {
+        Connection con = createConnectionSafely(entryURL, username, password);
         globalState.getState().logStatement(String.format("\\c %s;", entryDatabaseName));
         globalState.getState().logStatement("DROP DATABASE IF EXISTS " + databaseName);
         createDatabaseCommand = getCreateDatabaseCommand(globalState);
@@ -214,14 +219,24 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
             s.execute(createDatabaseCommand);
         }
         con.close();
-        int databaseIndex = entryURL.indexOf(entryDatabaseName);
-        String preDatabaseName = entryURL.substring(0, databaseIndex);
-        String postDatabaseName = entryURL.substring(databaseIndex + entryDatabaseName.length());
-        testURL = preDatabaseName + databaseName + postDatabaseName;
-        globalState.getState().logStatement(String.format("\\c %s;", databaseName));
+    }
 
-        con = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5433/yugabyte?user=yugabyte&password=yugabyte");
-        return new SQLConnection(con);
+    private Connection createConnectionSafely(String entryURL, String user, String password) throws IllegalStateException {
+        Connection con = null;
+        IllegalStateException lastException = new IllegalStateException("Empty exception");
+        long endTime = System.currentTimeMillis() + 30000;
+        while (System.currentTimeMillis() < endTime) {
+            try {
+                con = DriverManager.getConnection(entryURL, user, password);
+                break;
+            } catch (SQLException throwables) {
+                lastException = new IllegalStateException(throwables);
+            }
+        }
+
+        if (con == null) throw lastException;
+
+        return con;
     }
 
     protected void readFunctions(YugabyteGlobalState globalState) throws SQLException {
@@ -242,7 +257,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
                         generateOnlyKnown, globalState);
                 globalState.executeStatement(createTable);
             } catch (IgnoreMeException e) {
-
+                // do nothing
             }
         }
     }
@@ -261,7 +276,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
 
     private String getCreateDatabaseCommand(YugabyteGlobalState state) {
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE DATABASE " + databaseName + " ");
+        sb.append("CREATE DATABASE ").append(databaseName).append(" ");
         if (Randomly.getBoolean() && ((YugabyteOptions) state.getDbmsSpecificOptions()).testCollations) {
             if (Randomly.getBoolean()) {
                 sb.append("WITH ENCODING '");

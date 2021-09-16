@@ -18,23 +18,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Parameters(separators = "=", commandDescription = "YugabyteQL (default port: " + YugabyteOptions.DEFAULT_PORT
+@Parameters(separators = "=", commandDescription = "YSQL (default port: " + YugabyteOptions.DEFAULT_PORT
         + ", default host: " + YugabyteOptions.DEFAULT_HOST)
 public class YugabyteOptions implements DBMSSpecificOptions<YugabyteOracleFactory> {
     public static final String DEFAULT_HOST = "localhost";
-    public static final int DEFAULT_PORT = 5432;
+    public static final int DEFAULT_PORT = 5433;
 
     @Parameter(names = "--bulk-insert", description = "Specifies whether INSERT statements should be issued in bulk", arity = 1)
     public boolean allowBulkInsert;
 
-    @Parameter(names = "--oracle", description = "Specifies which test oracle should be used for YugabyteQL")
+    @Parameter(names = "--oracle", description = "Specifies which test oracle should be used for YSQL")
     public List<YugabyteOracleFactory> oracle = Arrays.asList(YugabyteOracleFactory.QUERY_PARTITIONING);
 
     @Parameter(names = "--test-collations", description = "Specifies whether to test different collations", arity = 1)
     public boolean testCollations = true;
 
-    @Parameter(names = "--connection-url", description = "Specifies the URL for connecting to the YugabyteQL server", arity = 1)
-    public String connectionURL = String.format("Yugabyteql://%s:%d/test", YugabyteOptions.DEFAULT_HOST,
+    @Parameter(names = "--connection-url", description = "Specifies the URL for connecting to the YSQL server", arity = 1)
+    public String connectionURL = String.format("jdbc:postgresql://%s:%d/yugabyte", YugabyteOptions.DEFAULT_HOST,
             YugabyteOptions.DEFAULT_PORT);
 
     public enum YugabyteOracleFactory implements OracleFactory<YugabyteGlobalState> {

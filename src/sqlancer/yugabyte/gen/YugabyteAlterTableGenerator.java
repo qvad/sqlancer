@@ -14,12 +14,12 @@ import java.util.List;
 
 public class YugabyteAlterTableGenerator {
 
-    private YugabyteTable randomTable;
-    private Randomly r;
+    private final YugabyteTable randomTable;
+    private final Randomly r;
     private static YugabyteColumn randomColumn;
-    private boolean generateOnlyKnown;
-    private List<String> opClasses;
-    private YugabyteGlobalState globalState;
+    private final boolean generateOnlyKnown;
+    private final List<String> opClasses;
+    private final YugabyteGlobalState globalState;
 
     protected enum Action {
         // ALTER_TABLE_ADD_COLUMN, // [ COLUMN ] column data_type [ COLLATE collation ] [
@@ -50,12 +50,12 @@ public class YugabyteAlterTableGenerator {
     private enum Attribute {
         N_DISTINCT_INHERITED("n_distinct_inherited"), N_DISTINCT("n_distinct");
 
-        private String val;
+        private final String val;
 
         Attribute(String val) {
             this.val = val;
         }
-    };
+    }
 
     public List<Action> getActions(ExpectedErrors errors) {
         YugabyteCommon.addCommonExpressionErrors(errors);
@@ -63,6 +63,7 @@ public class YugabyteAlterTableGenerator {
         YugabyteCommon.addCommonTableErrors(errors);
         errors.add("cannot drop desired object(s) because other objects depend on them");
         errors.add("invalid input syntax for");
+        errors.add("cannot remove a key column");
         errors.add("it has pending trigger events");
         errors.add("could not open relation");
         errors.add("functions in index expression must be marked IMMUTABLE");

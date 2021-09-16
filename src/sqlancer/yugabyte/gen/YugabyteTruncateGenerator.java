@@ -3,6 +3,7 @@ package sqlancer.yugabyte.gen;
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.common.schema.AbstractTable;
 import sqlancer.yugabyte.YugabyteGlobalState;
 
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ public final class YugabyteTruncateGenerator {
         // sb.append(" ONLY");
         // }
         sb.append(" ");
-        sb.append(globalState.getSchema().getDatabaseTablesRandomSubsetNotEmpty().stream().map(t -> t.getName())
+        sb.append(globalState.getSchema().getDatabaseTablesRandomSubsetNotEmpty().stream().map(AbstractTable::getName)
                 .collect(Collectors.joining(", ")));
 //        if (Randomly.getBoolean()) {
 //            sb.append(" ");

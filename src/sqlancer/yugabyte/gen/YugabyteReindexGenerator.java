@@ -36,7 +36,7 @@ public final class YugabyteReindexGenerator {
             if (indexes.isEmpty()) {
                 throw new IgnoreMeException();
             }
-            sb.append(indexes.stream().map(i -> i.getIndexName()).collect(Collectors.joining()));
+            sb.append(indexes.stream().map(YugabyteIndex::getIndexName).collect(Collectors.joining()));
             break;
         case TABLE:
             sb.append("TABLE ");

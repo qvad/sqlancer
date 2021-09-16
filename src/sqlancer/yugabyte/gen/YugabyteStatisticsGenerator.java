@@ -4,6 +4,7 @@ import sqlancer.IgnoreMeException;
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.common.schema.AbstractTableColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteStatisticsObject;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
@@ -33,14 +34,14 @@ public final class YugabyteStatisticsGenerator {
             sb.append(" (");
             List<String> statsSubset;
             statsSubset = Randomly.nonEmptySubset("ndistinct", "dependencies", "mcv");
-            sb.append(statsSubset.stream().collect(Collectors.joining(", ")));
+            sb.append(String.join(", ", statsSubset));
             sb.append(")");
         }
 
         List<YugabyteColumn> randomColumns = randomTable.getRandomNonEmptyColumnSubset(
                 globalState.getRandomly().getInteger(2, randomTable.getColumns().size()));
         sb.append(" ON ");
-        sb.append(randomColumns.stream().map(c -> c.getName()).collect(Collectors.joining(", ")));
+        sb.append(randomColumns.stream().map(AbstractTableColumn::getName).collect(Collectors.joining(", ")));
         sb.append(" FROM ");
         sb.append(randomTable.getName());
         return new SQLQueryAdapter(sb.toString(), ExpectedErrors.from("cannot have more than 8 columns in statistics"),
@@ -63,7 +64,7 @@ public final class YugabyteStatisticsGenerator {
         int i = 0;
         while (true) {
             String candidateName = "s" + i;
-            if (!statistics.stream().anyMatch(stat -> stat.getName().contentEquals(candidateName))) {
+            if (statistics.stream().noneMatch(stat -> stat.getName().contentEquals(candidateName))) {
                 return candidateName;
             }
             i++;

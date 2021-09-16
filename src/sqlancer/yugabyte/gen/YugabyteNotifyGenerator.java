@@ -27,10 +27,8 @@ public final class YugabyteNotifyGenerator {
     }
 
     public static SQLQueryAdapter createListen() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("LISTEN ");
-        sb.append(getChannel());
-        return new SQLQueryAdapter(sb.toString());
+        String sb = "LISTEN " + getChannel();
+        return new SQLQueryAdapter(sb);
     }
 
     public static SQLQueryAdapter createUnlisten() {

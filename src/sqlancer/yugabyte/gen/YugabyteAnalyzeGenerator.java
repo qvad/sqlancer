@@ -3,6 +3,7 @@ package sqlancer.yugabyte.gen;
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.common.schema.AbstractTableColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 import sqlancer.yugabyte.YugabyteGlobalState;
 
@@ -30,7 +31,7 @@ public final class YugabyteAnalyzeGenerator {
             sb.append(table.getName());
             if (Randomly.getBoolean()) {
                 sb.append("(");
-                sb.append(table.getRandomNonEmptyColumnSubset().stream().map(c -> c.getName())
+                sb.append(table.getRandomNonEmptyColumnSubset().stream().map(AbstractTableColumn::getName)
                         .collect(Collectors.joining(", ")));
                 sb.append(")");
             }

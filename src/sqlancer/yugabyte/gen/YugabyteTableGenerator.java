@@ -37,6 +37,7 @@ public class YugabyteTableGenerator {
         this.generateOnlyKnown = generateOnlyKnown;
         this.globalState = globalState;
         table = new YugabyteTable(tableName, columnsToBeAdded, null, null, null, false, false);
+        errors.add("PRIMARY KEY containing column of type");
         errors.add("invalid input syntax for");
         errors.add("is not unique");
         errors.add("integer out of range");
@@ -104,7 +105,7 @@ public class YugabyteTableGenerator {
         }
         sb.append(")");
         generatePartitionBy();
-        YugabyteCommon.generateWith(sb, globalState, errors);
+//        YugabyteCommon.generateWith(sb, globalState, errors);
         if (Randomly.getBoolean() && isTemporaryTable) {
             sb.append(" ON COMMIT ");
             sb.append(Randomly.fromOptions("PRESERVE ROWS", "DELETE ROWS", "DROP"));

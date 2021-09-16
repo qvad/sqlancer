@@ -3,6 +3,7 @@ package sqlancer.yugabyte.gen;
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.common.schema.AbstractTableColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 import sqlancer.yugabyte.YugabyteGlobalState;
@@ -18,7 +19,7 @@ public final class YugabyteInsertGenerator {
     }
 
     public static SQLQueryAdapter insert(YugabyteGlobalState globalState) {
-        YugabyteTable table = globalState.getSchema().getRandomTable(t -> t.isInsertable());
+        YugabyteTable table = globalState.getSchema().getRandomTable(YugabyteTable::isInsertable);
         ExpectedErrors errors = new ExpectedErrors();
         errors.add("cannot insert into column");
         YugabyteCommon.addCommonExpressionErrors(errors);
@@ -39,7 +40,7 @@ public final class YugabyteInsertGenerator {
         sb.append(table.getName());
         List<YugabyteColumn> columns = table.getRandomNonEmptyColumnSubset();
         sb.append("(");
-        sb.append(columns.stream().map(c -> c.getName()).collect(Collectors.joining(", ")));
+        sb.append(columns.stream().map(AbstractTableColumn::getName).collect(Collectors.joining(", ")));
         sb.append(")");
         if (Randomly.getBooleanWithRatherLowProbability()) {
             sb.append(" OVERRIDING");

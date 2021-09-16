@@ -18,7 +18,7 @@ public final class YugabyteUpdateGenerator {
     }
 
     public static SQLQueryAdapter create(YugabyteGlobalState globalState) {
-        YugabyteTable randomTable = globalState.getSchema().getRandomTable(t -> t.isInsertable());
+        YugabyteTable randomTable = globalState.getSchema().getRandomTable(YugabyteTable::isInsertable);
         StringBuilder sb = new StringBuilder();
         sb.append("UPDATE ");
         sb.append(randomTable.getName());
