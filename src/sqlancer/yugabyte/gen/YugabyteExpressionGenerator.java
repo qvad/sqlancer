@@ -270,6 +270,8 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
             case MONEY:
             case INET:
                 return generateConstant(r, dataType);
+            case BYTEA:
+                return generateByteExpression(depth);
             case BIT:
                 return generateBitExpression(depth);
             case RANGE:
@@ -290,6 +292,7 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
         case RANGE:
         case REAL:
         case INET:
+        case BYTEA:
             return YugabyteCompoundDataType.create(type);
         case TEXT: // TODO
         case BIT:
@@ -355,6 +358,10 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
     private enum BitExpression {
         BINARY_OPERATION
     };
+
+    private YugabyteExpression generateByteExpression(int depth) {
+        return YugabyteConstant.createByteConstant("Th\\000omas");
+    }
 
     private YugabyteExpression generateBitExpression(int depth) {
         BitExpression option;
@@ -458,6 +465,8 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
             return YugabyteConstant.createInetConstant(getRandomInet(r));
         case BIT:
             return YugabyteConstant.createBitConstant(r.getInteger());
+        case BYTEA:
+            return YugabyteConstant.createByteConstant(String.valueOf(r.getInteger()));
         default:
             throw new AssertionError(type);
         }

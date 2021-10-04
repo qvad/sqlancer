@@ -38,7 +38,7 @@ public enum YugabyteFunctionWithUnknownResult {
     PG_TRIGGER_DEPTH("pg_trigger_depth", YugabyteDataType.INT), VERSION("version", YugabyteDataType.TEXT),
 
     //
-    TO_CHAR("to_char", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT) {
+    TO_CHAR("to_char", YugabyteDataType.TEXT, YugabyteDataType.BYTEA, YugabyteDataType.TEXT) {
         @Override
         public YugabyteExpression[] getArguments(YugabyteDataType returnType, YugabyteExpressionGenerator gen,
                                                  int depth) {
@@ -63,7 +63,7 @@ public enum YugabyteFunctionWithUnknownResult {
     },
     // concat
     // segfault
-    BIT_LENGTH("bit_length", YugabyteDataType.INT, YugabyteDataType.TEXT),
+    BIT_LENGTH("bit_length", YugabyteDataType.INT, YugabyteDataType.BYTEA),
     INITCAP("initcap", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     LEFT("left", YugabyteDataType.TEXT, YugabyteDataType.INT, YugabyteDataType.TEXT),
     LOWER("lower", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
@@ -72,10 +72,9 @@ public enum YugabyteFunctionWithUnknownResult {
     // PG_CLIENT_ENCODING("pg_client_encoding", YugabyteDataType.TEXT),
     QUOTE_LITERAL("quote_literal", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     QUOTE_IDENT("quote_ident", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
-    REGEX_REPLACE("regexp_replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT),
-    REPEAT("repeat", YugabyteDataType.TEXT, YugabyteDataType.TEXT,
-     YugabyteDataType.INT),
-    REPLACE("replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT),
+    REGEX_REPLACE("regexp_replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT),
+    REPEAT("repeat", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.INT),
+    REPLACE("replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     REVERSE("reverse", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     RIGHT("right", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.INT),
     RPAD("rpad", YugabyteDataType.TEXT, YugabyteDataType.INT, YugabyteDataType.TEXT),

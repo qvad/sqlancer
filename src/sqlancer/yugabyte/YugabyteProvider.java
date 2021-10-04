@@ -15,6 +15,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 // EXISTS
 // IN
@@ -207,6 +208,12 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
 
     // for some reason yugabyte unable to create few databases simultaneously
     private synchronized void createDatabaseSync(YugabyteGlobalState globalState, String entryDatabaseName) throws SQLException {
+        try {
+            Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 5000));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         Connection con = createConnectionSafely(entryURL, username, password);
         globalState.getState().logStatement(String.format("\\c %s;", entryDatabaseName));
         globalState.getState().logStatement("DROP DATABASE IF EXISTS " + databaseName);

@@ -127,7 +127,7 @@ public abstract class YugabyteConstant implements YugabyteExpression {
 
     public static class StringConstant extends YugabyteConstant {
 
-        private final String value;
+        protected final String value;
 
         public StringConstant(String value) {
             this.value = value;
@@ -318,6 +318,18 @@ public abstract class YugabyteConstant implements YugabyteExpression {
 
     }
 
+    public static class ByteConstant extends StringConstant {
+
+        public ByteConstant(String value) {
+            super(value);
+        }
+
+        @Override
+        public String getTextRepresentation() {
+            return String.format("'%s'::bytea", value.replace("'", "''"));
+        }
+    }
+
     public static YugabyteConstant createNullConstant() {
         return new YugabyteNullConstant();
     }
@@ -384,6 +396,10 @@ public abstract class YugabyteConstant implements YugabyteExpression {
 
     public static YugabyteConstant createTextConstant(String string) {
         return new StringConstant(string);
+    }
+
+    public static YugabyteConstant createByteConstant(String string) {
+        return new ByteConstant(string);
     }
 
     public abstract static class YugabyteConstantBase extends YugabyteConstant {

@@ -225,12 +225,15 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
             break;
         case BIT:
             sb.append("BIT");
+            break;
+        case BYTEA:
+            sb.append("BYTEA");
+            break;
             // if (Randomly.getBoolean()) {
             // sb.append("(");
             // sb.append(Randomly.getNotCachedInteger(1, 100));
             // sb.append(")");
             // }
-            break;
         default:
             throw new AssertionError(cast.getType());
         }

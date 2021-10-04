@@ -108,7 +108,9 @@ public class YugabyteTableGenerator {
 //        YugabyteCommon.generateWith(sb, globalState, errors);
         if (Randomly.getBoolean() && isTemporaryTable) {
             sb.append(" ON COMMIT ");
-            sb.append(Randomly.fromOptions("PRESERVE ROWS", "DELETE ROWS", "DROP"));
+            // todo ON COMMIT DROP fails and it's known issue
+//            sb.append(Randomly.fromOptions("PRESERVE ROWS", "DELETE ROWS", "DROP"));
+            sb.append(Randomly.fromOptions("PRESERVE ROWS", "DELETE ROWS"));
             sb.append(" ");
         }
     }

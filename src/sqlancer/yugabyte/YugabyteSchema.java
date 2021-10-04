@@ -21,7 +21,7 @@ public class YugabyteSchema extends AbstractSchema<YugabyteGlobalState, Yugabyte
     private final String databaseName;
 
     public enum YugabyteDataType {
-        INT, BOOLEAN, TEXT, DECIMAL, FLOAT, REAL, RANGE, MONEY, BIT, INET;
+        INT, BOOLEAN, BYTEA, TEXT, DECIMAL, FLOAT, REAL, RANGE, MONEY, BIT, INET;
 
         public static YugabyteDataType getRandomType() {
             List<YugabyteDataType> dataTypes = new ArrayList<>(Arrays.asList(values()));
@@ -125,6 +125,8 @@ public class YugabyteSchema extends AbstractSchema<YugabyteGlobalState, Yugabyte
             return YugabyteDataType.RANGE;
         case "money":
             return YugabyteDataType.MONEY;
+        case "bytea":
+            return YugabyteDataType.BYTEA;
         case "bit":
         case "bit varying":
             return YugabyteDataType.BIT;

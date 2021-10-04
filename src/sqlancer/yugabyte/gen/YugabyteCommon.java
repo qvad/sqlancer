@@ -26,6 +26,13 @@ public final class YugabyteCommon {
     public static void addCommonFetchErrors(ExpectedErrors errors) {
         errors.add("Conflicts with committed transaction");
 
+        errors.add("relation \"t0\" already exists");
+        errors.add("relation \"t1\" already exists");
+        errors.add("relation \"t2\" already exists");
+        errors.add("relation \"t3\" already exists");
+        errors.add("relation \"t4\" already exists");
+        errors.add("relation \"t5\" already exists");
+
         errors.add("FULL JOIN is only supported with merge-joinable or hash-joinable join conditions");
         errors.add("but it cannot be referenced from this part of the query");
         errors.add("missing FROM-clause entry for table");
@@ -47,6 +54,9 @@ public final class YugabyteCommon {
     }
 
     public static void addCommonExpressionErrors(ExpectedErrors errors) {
+        errors.add("syntax error at or near \"(\"");
+        errors.add("does not exists");
+
         errors.add("Invalid column number");
         errors.add("specified more than once");
         errors.add("You might need to add explicit type casts");
@@ -175,6 +185,9 @@ public final class YugabyteCommon {
             break;
         case MONEY:
             sb.append("money");
+            break;
+        case BYTEA:
+            sb.append("bytea");
             break;
         case BIT:
             sb.append("BIT");
