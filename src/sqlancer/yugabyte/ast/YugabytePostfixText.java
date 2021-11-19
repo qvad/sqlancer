@@ -10,7 +10,7 @@ public class YugabytePostfixText implements YugabyteExpression {
     private final YugabyteDataType type;
 
     public YugabytePostfixText(YugabyteExpression expr, String text, YugabyteConstant expectedValue,
-                               YugabyteDataType type) {
+            YugabyteDataType type) {
         this.expr = expr;
         this.text = text;
         this.expectedValue = expectedValue;
@@ -26,12 +26,12 @@ public class YugabytePostfixText implements YugabyteExpression {
     }
 
     @Override
-    public YugabyteConstant getExpectedValue() {
-        return expectedValue;
+    public YugabyteDataType getExpressionType() {
+        return type;
     }
 
     @Override
-    public YugabyteDataType getExpressionType() {
-        return type;
+    public YugabyteConstant getExpectedValue() {
+        return expectedValue;
     }
 }

@@ -1,17 +1,17 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import sqlancer.IgnoreMeException;
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
 import sqlancer.common.schema.AbstractTableColumn;
+import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteStatisticsObject;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
-import sqlancer.yugabyte.YugabyteGlobalState;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public final class YugabyteStatisticsGenerator {
 

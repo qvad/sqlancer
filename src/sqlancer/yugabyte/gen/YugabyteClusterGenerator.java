@@ -3,8 +3,8 @@ package sqlancer.yugabyte.gen;
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 import sqlancer.yugabyte.YugabyteGlobalState;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 
 public final class YugabyteClusterGenerator {
 

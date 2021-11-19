@@ -9,6 +9,26 @@ import sqlancer.yugabyte.ast.YugabyteBinaryComparisonOperation.YugabyteBinaryCom
 public class YugabyteBinaryComparisonOperation
         extends BinaryOperatorNode<YugabyteExpression, YugabyteBinaryComparisonOperator> implements YugabyteExpression {
 
+    public YugabyteBinaryComparisonOperation(YugabyteExpression left, YugabyteExpression right,
+            YugabyteBinaryComparisonOperator op) {
+        super(left, right, op);
+    }
+
+    @Override
+    public YugabyteDataType getExpressionType() {
+        return YugabyteDataType.BOOLEAN;
+    }
+
+    @Override
+    public YugabyteConstant getExpectedValue() {
+        YugabyteConstant leftExpectedValue = getLeft().getExpectedValue();
+        YugabyteConstant rightExpectedValue = getRight().getExpectedValue();
+        if (leftExpectedValue == null || rightExpectedValue == null) {
+            return null;
+        }
+        return getOp().getExpectedValue(leftExpectedValue, rightExpectedValue);
+    }
+
     public enum YugabyteBinaryComparisonOperator implements Operator {
         EQUALS("=") {
             @Override
@@ -46,14 +66,12 @@ public class YugabyteBinaryComparisonOperation
             }
         },
         LESS("<") {
-
             @Override
             public YugabyteConstant getExpectedValue(YugabyteConstant leftVal, YugabyteConstant rightVal) {
                 return leftVal.isLessThan(rightVal);
             }
         },
         LESS_EQUALS("<=") {
-
             @Override
             public YugabyteConstant getExpectedValue(YugabyteConstant leftVal, YugabyteConstant rightVal) {
                 YugabyteConstant lessThan = leftVal.isLessThan(rightVal);
@@ -80,7 +98,6 @@ public class YugabyteBinaryComparisonOperation
             }
         },
         GREATER_EQUALS(">=") {
-
             @Override
             public YugabyteConstant getExpectedValue(YugabyteConstant leftVal, YugabyteConstant rightVal) {
                 YugabyteConstant equals = leftVal.isEquals(rightVal);
@@ -99,41 +116,21 @@ public class YugabyteBinaryComparisonOperation
 
         private final String textRepresentation;
 
-        @Override
-        public String getTextRepresentation() {
-            return textRepresentation;
-        }
-
         YugabyteBinaryComparisonOperator(String textRepresentation) {
             this.textRepresentation = textRepresentation;
         }
-
-        public abstract YugabyteConstant getExpectedValue(YugabyteConstant leftVal, YugabyteConstant rightVal);
 
         public static YugabyteBinaryComparisonOperator getRandom() {
             return Randomly.fromOptions(YugabyteBinaryComparisonOperator.values());
         }
 
-    }
-
-    public YugabyteBinaryComparisonOperation(YugabyteExpression left, YugabyteExpression right,
-                                             YugabyteBinaryComparisonOperator op) {
-        super(left, right, op);
-    }
-
-    @Override
-    public YugabyteConstant getExpectedValue() {
-        YugabyteConstant leftExpectedValue = getLeft().getExpectedValue();
-        YugabyteConstant rightExpectedValue = getRight().getExpectedValue();
-        if (leftExpectedValue == null || rightExpectedValue == null) {
-            return null;
+        @Override
+        public String getTextRepresentation() {
+            return textRepresentation;
         }
-        return getOp().getExpectedValue(leftExpectedValue, rightExpectedValue);
-    }
 
-    @Override
-    public YugabyteDataType getExpressionType() {
-        return YugabyteDataType.BOOLEAN;
+        public abstract YugabyteConstant getExpectedValue(YugabyteConstant leftVal, YugabyteConstant rightVal);
+
     }
 
 }

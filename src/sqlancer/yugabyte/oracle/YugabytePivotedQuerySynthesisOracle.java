@@ -1,26 +1,30 @@
 package sqlancer.yugabyte.oracle;
 
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import sqlancer.Randomly;
 import sqlancer.SQLConnection;
 import sqlancer.common.oracle.PivotedQuerySynthesisBase;
 import sqlancer.common.query.Query;
 import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteRowValue;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTables;
-import sqlancer.yugabyte.ast.YugabytePostfixOperation.PostfixOperator;
-import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteFromTable;
-import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteVisitor;
-import sqlancer.yugabyte.ast.*;
+import sqlancer.yugabyte.ast.YugabyteColumnValue;
+import sqlancer.yugabyte.ast.YugabyteConstant;
+import sqlancer.yugabyte.ast.YugabyteExpression;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation.PostfixOperator;
+import sqlancer.yugabyte.ast.YugabyteSelect;
+import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteFromTable;
 import sqlancer.yugabyte.gen.YugabyteCommon;
 import sqlancer.yugabyte.gen.YugabyteExpressionGenerator;
-
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class YugabytePivotedQuerySynthesisOracle
         extends PivotedQuerySynthesisBase<YugabyteGlobalState, YugabyteRowValue, YugabyteExpression, SQLConnection> {
@@ -31,37 +35,6 @@ public class YugabytePivotedQuerySynthesisOracle
         super(globalState);
         YugabyteCommon.addCommonExpressionErrors(errors);
         YugabyteCommon.addCommonFetchErrors(errors);
-    }
-
-    @Override
-    public SQLQueryAdapter getRectifiedQuery() throws SQLException {
-        YugabyteTables randomFromTables = globalState.getSchema().getRandomTableNonEmptyTables();
-
-        YugabyteSelect selectStatement = new YugabyteSelect();
-        selectStatement.setSelectType(Randomly.fromOptions(YugabyteSelect.SelectType.values()));
-        List<YugabyteColumn> columns = randomFromTables.getColumns();
-        pivotRow = randomFromTables.getRandomRowValue(globalState.getConnection());
-
-        fetchColumns = columns;
-        selectStatement.setFromList(randomFromTables.getTables().stream().map(t -> new YugabyteFromTable(t, false))
-                .collect(Collectors.toList()));
-        selectStatement.setFetchColumns(fetchColumns.stream()
-                .map(c -> new YugabyteColumnValue(getFetchValueAliasedColumn(c), pivotRow.getValues().get(c)))
-                .collect(Collectors.toList()));
-        YugabyteExpression whereClause = generateRectifiedExpression(columns, pivotRow);
-        selectStatement.setWhereClause(whereClause);
-        List<YugabyteExpression> groupByClause = generateGroupByClause(columns, pivotRow);
-        selectStatement.setGroupByExpressions(groupByClause);
-        YugabyteExpression limitClause = generateLimit();
-        selectStatement.setLimitClause(limitClause);
-        if (limitClause != null) {
-            YugabyteExpression offsetClause = generateOffset();
-            selectStatement.setOffsetClause(offsetClause);
-        }
-        List<YugabyteExpression> orderBy = new YugabyteExpressionGenerator(globalState).setColumns(columns)
-                .generateOrderBy();
-        selectStatement.setOrderByExpressions(orderBy);
-        return new SQLQueryAdapter(YugabyteVisitor.asString(selectStatement));
     }
 
     /*
@@ -137,6 +110,37 @@ public class YugabytePivotedQuerySynthesisOracle
         }
         String resultingQueryString = sb.toString();
         return new SQLQueryAdapter(resultingQueryString, errors);
+    }
+
+    @Override
+    public SQLQueryAdapter getRectifiedQuery() throws SQLException {
+        YugabyteTables randomFromTables = globalState.getSchema().getRandomTableNonEmptyTables();
+
+        YugabyteSelect selectStatement = new YugabyteSelect();
+        selectStatement.setSelectType(Randomly.fromOptions(YugabyteSelect.SelectType.values()));
+        List<YugabyteColumn> columns = randomFromTables.getColumns();
+        pivotRow = randomFromTables.getRandomRowValue(globalState.getConnection());
+
+        fetchColumns = columns;
+        selectStatement.setFromList(randomFromTables.getTables().stream().map(t -> new YugabyteFromTable(t, false))
+                .collect(Collectors.toList()));
+        selectStatement.setFetchColumns(fetchColumns.stream()
+                .map(c -> new YugabyteColumnValue(getFetchValueAliasedColumn(c), pivotRow.getValues().get(c)))
+                .collect(Collectors.toList()));
+        YugabyteExpression whereClause = generateRectifiedExpression(columns, pivotRow);
+        selectStatement.setWhereClause(whereClause);
+        List<YugabyteExpression> groupByClause = generateGroupByClause(columns, pivotRow);
+        selectStatement.setGroupByExpressions(groupByClause);
+        YugabyteExpression limitClause = generateLimit();
+        selectStatement.setLimitClause(limitClause);
+        if (limitClause != null) {
+            YugabyteExpression offsetClause = generateOffset();
+            selectStatement.setOffsetClause(offsetClause);
+        }
+        List<YugabyteExpression> orderBy = new YugabyteExpressionGenerator(globalState).setColumns(columns)
+                .generateOrderBy();
+        selectStatement.setOrderByExpressions(orderBy);
+        return new SQLQueryAdapter(YugabyteVisitor.asString(selectStatement));
     }
 
     @Override

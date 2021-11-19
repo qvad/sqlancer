@@ -9,6 +9,15 @@ import sqlancer.yugabyte.ast.YugabyteBinaryBitOperation.YugabyteBinaryBitOperato
 public class YugabyteBinaryBitOperation extends BinaryOperatorNode<YugabyteExpression, YugabyteBinaryBitOperator>
         implements YugabyteExpression {
 
+    public YugabyteBinaryBitOperation(YugabyteBinaryBitOperator op, YugabyteExpression left, YugabyteExpression right) {
+        super(left, right, op);
+    }
+
+    @Override
+    public YugabyteDataType getExpressionType() {
+        return YugabyteDataType.BIT;
+    }
+
     public enum YugabyteBinaryBitOperator implements Operator {
         CONCATENATION("||"), //
         BITWISE_AND("&"), //
@@ -17,7 +26,7 @@ public class YugabyteBinaryBitOperation extends BinaryOperatorNode<YugabyteExpre
         BITWISE_SHIFT_LEFT("<<"), //
         BITWISE_SHIFT_RIGHT(">>");
 
-        private String text;
+        private final String text;
 
         YugabyteBinaryBitOperator(String text) {
             this.text = text;
@@ -32,15 +41,6 @@ public class YugabyteBinaryBitOperation extends BinaryOperatorNode<YugabyteExpre
             return text;
         }
 
-    }
-
-    public YugabyteBinaryBitOperation(YugabyteBinaryBitOperator op, YugabyteExpression left, YugabyteExpression right) {
-        super(left, right, op);
-    }
-
-    @Override
-    public YugabyteDataType getExpressionType() {
-        return YugabyteDataType.BIT;
     }
 
 }

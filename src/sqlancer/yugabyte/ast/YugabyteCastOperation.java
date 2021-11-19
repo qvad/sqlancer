@@ -1,7 +1,7 @@
 package sqlancer.yugabyte.ast;
 
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.YugabyteCompoundDataType;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 
 public class YugabyteCastOperation implements YugabyteExpression {
 

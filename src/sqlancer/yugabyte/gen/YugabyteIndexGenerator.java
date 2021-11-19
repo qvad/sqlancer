@@ -1,27 +1,23 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import sqlancer.Randomly;
 import sqlancer.common.DBMSCommon;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteIndex;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
-import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteVisitor;
 import sqlancer.yugabyte.ast.YugabyteExpression;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public final class YugabyteIndexGenerator {
 
     private YugabyteIndexGenerator() {
-    }
-
-    public enum IndexType {
-        BTREE, HASH, GIST, GIN
     }
 
     public static SQLQueryAdapter generate(YugabyteGlobalState globalState) {
@@ -40,7 +36,7 @@ public final class YugabyteIndexGenerator {
         // sb.append("CONCURRENTLY ");
         // }
         YugabyteTable randomTable = globalState.getSchema().getRandomTable(t -> !t.isView()); // TODO: materialized
-                                                                                              // views
+        // views
         String indexName = getNewIndexName(randomTable);
         sb.append(indexName);
         sb.append(" ON ");
@@ -148,6 +144,10 @@ public final class YugabyteIndexGenerator {
                 return indexName;
             }
         }
+    }
+
+    public enum IndexType {
+        BTREE, HASH, GIST, GIN
     }
 
 }

@@ -1,39 +1,34 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import sqlancer.Randomly;
 import sqlancer.common.DBMSCommon;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
-import sqlancer.yugabyte.YugabyteGlobalState;
-import sqlancer.yugabyte.YugabyteSchema;
 import sqlancer.yugabyte.YugabyteVisitor;
 import sqlancer.yugabyte.ast.YugabyteExpression;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class YugabyteTableGenerator {
 
-    private final String tableName;
-    private boolean columnCanHavePrimaryKey;
-    private boolean columnHasPrimaryKey;
-    private final StringBuilder sb = new StringBuilder();
-    private boolean isTemporaryTable;
-    private final YugabyteSchema newSchema;
-    private final List<YugabyteColumn> columnsToBeAdded = new ArrayList<>();
     protected final ExpectedErrors errors = new ExpectedErrors();
+    private final String tableName;
+    private final StringBuilder sb = new StringBuilder();
+    private final List<YugabyteColumn> columnsToBeAdded = new ArrayList<>();
     private final YugabyteTable table;
     private final boolean generateOnlyKnown;
     private final YugabyteGlobalState globalState;
+    private boolean columnCanHavePrimaryKey;
+    private boolean columnHasPrimaryKey;
+    private boolean isTemporaryTable;
 
-    public YugabyteTableGenerator(String tableName, YugabyteSchema newSchema, boolean generateOnlyKnown,
-                                  YugabyteGlobalState globalState) {
+    public YugabyteTableGenerator(String tableName, boolean generateOnlyKnown, YugabyteGlobalState globalState) {
         this.tableName = tableName;
-        this.newSchema = newSchema;
         this.generateOnlyKnown = generateOnlyKnown;
         this.globalState = globalState;
         table = new YugabyteTable(tableName, columnsToBeAdded, null, null, null, false, false);
@@ -59,9 +54,9 @@ public class YugabyteTableGenerator {
         YugabyteCommon.addCommonTableErrors(errors);
     }
 
-    public static SQLQueryAdapter generate(String tableName, YugabyteSchema newSchema, boolean generateOnlyKnown,
-                                           YugabyteGlobalState globalState) {
-        return new YugabyteTableGenerator(tableName, newSchema, generateOnlyKnown, globalState).generate();
+    public static SQLQueryAdapter generate(String tableName, boolean generateOnlyKnown,
+            YugabyteGlobalState globalState) {
+        return new YugabyteTableGenerator(tableName, generateOnlyKnown, globalState).generate();
     }
 
     private SQLQueryAdapter generate() {
@@ -105,11 +100,11 @@ public class YugabyteTableGenerator {
         }
         sb.append(")");
         generatePartitionBy();
-//        YugabyteCommon.generateWith(sb, globalState, errors);
+        // YugabyteCommon.generateWith(sb, globalState, errors);
         if (Randomly.getBoolean() && isTemporaryTable) {
             sb.append(" ON COMMIT ");
             // todo ON COMMIT DROP fails and it's known issue
-//            sb.append(Randomly.fromOptions("PRESERVE ROWS", "DELETE ROWS", "DROP"));
+            // sb.append(Randomly.fromOptions("PRESERVE ROWS", "DELETE ROWS", "DROP"));
             sb.append(Randomly.fromOptions("PRESERVE ROWS", "DELETE ROWS"));
             sb.append(" ");
         }
@@ -162,10 +157,6 @@ public class YugabyteTableGenerator {
         }
         sb.append(")");
     }
-
-    private enum ColumnConstraint {
-        NULL_OR_NOT_NULL, UNIQUE, PRIMARY_KEY, DEFAULT, CHECK, GENERATED
-    };
 
     private void createColumnConstraint(YugabyteDataType type, boolean serial) {
         List<ColumnConstraint> constraintSubset = Randomly.nonEmptySubset(ColumnConstraint.values());
@@ -241,6 +232,10 @@ public class YugabyteTableGenerator {
                 throw new AssertionError(sb);
             }
         }
+    }
+
+    private enum ColumnConstraint {
+        NULL_OR_NOT_NULL, UNIQUE, PRIMARY_KEY, DEFAULT, CHECK, GENERATED
     }
 
 }

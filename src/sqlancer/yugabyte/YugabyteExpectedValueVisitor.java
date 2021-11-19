@@ -1,13 +1,28 @@
 package sqlancer.yugabyte;
 
+import sqlancer.yugabyte.ast.YugabyteAggregate;
+import sqlancer.yugabyte.ast.YugabyteBetweenOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryLogicalOperation;
+import sqlancer.yugabyte.ast.YugabyteCastOperation;
+import sqlancer.yugabyte.ast.YugabyteColumnValue;
+import sqlancer.yugabyte.ast.YugabyteConstant;
+import sqlancer.yugabyte.ast.YugabyteExpression;
+import sqlancer.yugabyte.ast.YugabyteFunction;
+import sqlancer.yugabyte.ast.YugabyteInOperation;
+import sqlancer.yugabyte.ast.YugabyteOrderByTerm;
+import sqlancer.yugabyte.ast.YugabytePOSIXRegularExpression;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation;
+import sqlancer.yugabyte.ast.YugabytePostfixText;
+import sqlancer.yugabyte.ast.YugabytePrefixOperation;
+import sqlancer.yugabyte.ast.YugabyteSelect;
 import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteFromTable;
 import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteSubquery;
-import sqlancer.yugabyte.ast.*;
+import sqlancer.yugabyte.ast.YugabyteSimilarTo;
 
 public final class YugabyteExpectedValueVisitor implements YugabyteVisitor {
 
-    private final StringBuilder sb = new StringBuilder();
     private static final int NR_TABS = 0;
+    private final StringBuilder sb = new StringBuilder();
 
     private void print(YugabyteExpression expr) {
         YugabyteToStringVisitor v = new YugabyteToStringVisitor();
@@ -41,10 +56,6 @@ public final class YugabyteExpectedValueVisitor implements YugabyteVisitor {
     public void visit(YugabytePostfixOperation op) {
         print(op);
         visit(op.getExpression());
-    }
-
-    public String get() {
-        return sb.toString();
     }
 
     @Override
@@ -145,6 +156,10 @@ public final class YugabyteExpectedValueVisitor implements YugabyteVisitor {
         print(op);
         visit(op.getLeft());
         visit(op.getRight());
+    }
+
+    public String get() {
+        return sb.toString();
     }
 
 }

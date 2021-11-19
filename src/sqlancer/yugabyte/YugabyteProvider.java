@@ -1,13 +1,5 @@
 package sqlancer.yugabyte;
 
-import sqlancer.*;
-import sqlancer.common.DBMSCommon;
-import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.common.query.SQLQueryProvider;
-import sqlancer.common.query.SQLancerResultSet;
-import sqlancer.yugabyte.YugabyteOptions.YugabyteOracleFactory;
-import sqlancer.yugabyte.gen.*;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -17,15 +9,42 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
+import sqlancer.AbstractAction;
+import sqlancer.IgnoreMeException;
+import sqlancer.MainOptions;
+import sqlancer.Randomly;
+import sqlancer.SQLConnection;
+import sqlancer.SQLProviderAdapter;
+import sqlancer.StatementExecutor;
+import sqlancer.common.DBMSCommon;
+import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.common.query.SQLQueryProvider;
+import sqlancer.common.query.SQLancerResultSet;
+import sqlancer.yugabyte.YugabyteOptions.YugabyteOracleFactory;
+import sqlancer.yugabyte.gen.YugabyteAlterTableGenerator;
+import sqlancer.yugabyte.gen.YugabyteCommentGenerator;
+import sqlancer.yugabyte.gen.YugabyteDeleteGenerator;
+import sqlancer.yugabyte.gen.YugabyteDiscardGenerator;
+import sqlancer.yugabyte.gen.YugabyteDropIndexGenerator;
+import sqlancer.yugabyte.gen.YugabyteInsertGenerator;
+import sqlancer.yugabyte.gen.YugabyteNotifyGenerator;
+import sqlancer.yugabyte.gen.YugabyteSequenceGenerator;
+import sqlancer.yugabyte.gen.YugabyteTableGenerator;
+import sqlancer.yugabyte.gen.YugabyteTransactionGenerator;
+import sqlancer.yugabyte.gen.YugabyteTruncateGenerator;
+import sqlancer.yugabyte.gen.YugabyteUpdateGenerator;
+import sqlancer.yugabyte.gen.YugabyteVacuumGenerator;
+import sqlancer.yugabyte.gen.YugabyteViewGenerator;
+
 // EXISTS
 // IN
 public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, YugabyteOptions> {
 
+    public static final Object CREATION_LOCK = new Object();
     /**
      * Generate only data types and expressions that are understood by PQS.
      */
     public static boolean generateOnlyKnown;
-
     protected String entryURL;
     protected String username;
     protected String password;
@@ -42,56 +61,6 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
 
     protected YugabyteProvider(Class<YugabyteGlobalState> globalClass, Class<YugabyteOptions> optionClass) {
         super(globalClass, optionClass);
-    }
-
-    public enum Action implements AbstractAction<YugabyteGlobalState> {
-        ALTER_TABLE(g -> YugabyteAlterTableGenerator.create(g.getSchema().getRandomTable(t -> !t.isView()), g,
-                generateOnlyKnown)), //
-        COMMIT(g -> {
-            SQLQueryAdapter query;
-            if (Randomly.getBoolean()) {
-                query = new SQLQueryAdapter("COMMIT", true);
-            } else if (Randomly.getBoolean()) {
-                query = YugabyteTransactionGenerator.executeBegin();
-            } else {
-                query = new SQLQueryAdapter("ROLLBACK", true);
-            }
-            return query;
-        }), //
-        DELETE(YugabyteDeleteGenerator::create), //
-        DISCARD(YugabyteDiscardGenerator::create), //
-        DROP_INDEX(YugabyteDropIndexGenerator::create), //
-        INSERT(YugabyteInsertGenerator::insert), //
-        UPDATE(YugabyteUpdateGenerator::create), //
-        TRUNCATE(YugabyteTruncateGenerator::create), //
-        VACUUM(YugabyteVacuumGenerator::create), //
-//        SET(YugabyteSetGenerator::create), // TODO insert yugabyte sets
-        SET_CONSTRAINTS((g) -> {
-            String sb = "SET CONSTRAINTS ALL " + Randomly.fromOptions("DEFERRED", "IMMEDIATE");
-            return new SQLQueryAdapter(sb);
-        }), //
-        RESET_ROLE((g) -> new SQLQueryAdapter("RESET ROLE")), //
-        COMMENT_ON(YugabyteCommentGenerator::generate), //
-        RESET((g) -> new SQLQueryAdapter("RESET ALL") /*
-                                                       * https://www.postgres.org/docs/devel/sql-reset.html TODO: also
-                                                       * configuration parameter
-                                                       */), //
-        NOTIFY(YugabyteNotifyGenerator::createNotify), //
-        LISTEN((g) -> YugabyteNotifyGenerator.createListen()), //
-        UNLISTEN((g) -> YugabyteNotifyGenerator.createUnlisten()), //
-        CREATE_SEQUENCE(YugabyteSequenceGenerator::createSequence), //
-        CREATE_VIEW(YugabyteViewGenerator::create);
-
-        private final SQLQueryProvider<YugabyteGlobalState> sqlQueryProvider;
-
-        Action(SQLQueryProvider<YugabyteGlobalState> sqlQueryProvider) {
-            this.sqlQueryProvider = sqlQueryProvider;
-        }
-
-        @Override
-        public SQLQueryAdapter getQuery(YugabyteGlobalState state) throws Exception {
-            return sqlQueryProvider.getQuery(state);
-        }
     }
 
     protected static int mapActions(YugabyteGlobalState globalState, Action a) {
@@ -206,29 +175,36 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         return new SQLConnection(createConnectionSafely(testURL, username, password));
     }
 
-    // for some reason yugabyte unable to create few databases simultaneously
-    private synchronized void createDatabaseSync(YugabyteGlobalState globalState, String entryDatabaseName) throws SQLException {
-        try {
-            Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 5000));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        Connection con = createConnectionSafely(entryURL, username, password);
-        globalState.getState().logStatement(String.format("\\c %s;", entryDatabaseName));
-        globalState.getState().logStatement("DROP DATABASE IF EXISTS " + databaseName);
-        createDatabaseCommand = getCreateDatabaseCommand(globalState);
-        globalState.getState().logStatement(createDatabaseCommand);
-        try (Statement s = con.createStatement()) {
-            s.execute("DROP DATABASE IF EXISTS " + databaseName);
-        }
-        try (Statement s = con.createStatement()) {
-            s.execute(createDatabaseCommand);
-        }
-        con.close();
+    @Override
+    public String getDBMSName() {
+        return "yugabyte";
     }
 
-    private Connection createConnectionSafely(String entryURL, String user, String password) throws IllegalStateException {
+    // for some reason yugabyte unable to create few databases simultaneously
+    private void createDatabaseSync(YugabyteGlobalState globalState, String entryDatabaseName) throws SQLException {
+        synchronized (CREATION_LOCK) {
+            try {
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 5000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            Connection con = createConnectionSafely(entryURL, username, password);
+            globalState.getState().logStatement(String.format("\\c %s;", entryDatabaseName));
+            globalState.getState().logStatement("DROP DATABASE IF EXISTS " + databaseName);
+            createDatabaseCommand = getCreateDatabaseCommand(globalState);
+            globalState.getState().logStatement(createDatabaseCommand);
+            try (Statement s = con.createStatement()) {
+                s.execute("DROP DATABASE IF EXISTS " + databaseName);
+            }
+            try (Statement s = con.createStatement()) {
+                s.execute(createDatabaseCommand);
+            }
+            con.close();
+        }
+    }
+
+    private Connection createConnectionSafely(String entryURL, String user, String password) {
         Connection con = null;
         IllegalStateException lastException = new IllegalStateException("Empty exception");
         long endTime = System.currentTimeMillis() + 30000;
@@ -241,7 +217,9 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
             }
         }
 
-        if (con == null) throw lastException;
+        if (con == null) {
+            throw lastException;
+        }
 
         return con;
     }
@@ -257,14 +235,22 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
     }
 
     protected void createTables(YugabyteGlobalState globalState, int numTables) throws Exception {
-        while (globalState.getSchema().getDatabaseTables().size() < numTables) {
-            try {
-                String tableName = DBMSCommon.createTableName(globalState.getSchema().getDatabaseTables().size());
-                SQLQueryAdapter createTable = YugabyteTableGenerator.generate(tableName, globalState.getSchema(),
-                        generateOnlyKnown, globalState);
-                globalState.executeStatement(createTable);
-            } catch (IgnoreMeException e) {
-                // do nothing
+        synchronized (CREATION_LOCK) {
+            while (globalState.getSchema().getDatabaseTables().size() < numTables) {
+                try {
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 5000));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    String tableName = DBMSCommon.createTableName(globalState.getSchema().getDatabaseTables().size());
+                    SQLQueryAdapter createTable = YugabyteTableGenerator.generate(tableName, generateOnlyKnown,
+                            globalState);
+                    globalState.executeStatement(createTable);
+                } catch (IgnoreMeException e) {
+                    // do nothing
+                }
             }
         }
     }
@@ -284,7 +270,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
     private String getCreateDatabaseCommand(YugabyteGlobalState state) {
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE DATABASE ").append(databaseName).append(" ");
-        if (Randomly.getBoolean() && ((YugabyteOptions) state.getDbmsSpecificOptions()).testCollations) {
+        if (Randomly.getBoolean() && state.getDbmsSpecificOptions().testCollations) {
             if (Randomly.getBoolean()) {
                 sb.append("WITH ENCODING '");
                 sb.append(Randomly.fromOptions("utf8"));
@@ -300,9 +286,53 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         return sb.toString();
     }
 
-    @Override
-    public String getDBMSName() {
-        return "yugabyte";
+    public enum Action implements AbstractAction<YugabyteGlobalState> {
+        ALTER_TABLE(g -> YugabyteAlterTableGenerator.create(g.getSchema().getRandomTable(t -> !t.isView()), g)), //
+        COMMIT(g -> {
+            SQLQueryAdapter query;
+            if (Randomly.getBoolean()) {
+                query = new SQLQueryAdapter("COMMIT", true);
+            } else if (Randomly.getBoolean()) {
+                query = YugabyteTransactionGenerator.executeBegin();
+            } else {
+                query = new SQLQueryAdapter("ROLLBACK", true);
+            }
+            return query;
+        }), //
+        DELETE(YugabyteDeleteGenerator::create), //
+        DISCARD(YugabyteDiscardGenerator::create), //
+        DROP_INDEX(YugabyteDropIndexGenerator::create), //
+        INSERT(YugabyteInsertGenerator::insert), //
+        UPDATE(YugabyteUpdateGenerator::create), //
+        TRUNCATE(YugabyteTruncateGenerator::create), //
+        VACUUM(YugabyteVacuumGenerator::create), //
+        // SET(YugabyteSetGenerator::create), // TODO insert yugabyte sets
+        SET_CONSTRAINTS((g) -> {
+            String sb = "SET CONSTRAINTS ALL " + Randomly.fromOptions("DEFERRED", "IMMEDIATE");
+            return new SQLQueryAdapter(sb);
+        }), //
+        RESET_ROLE((g) -> new SQLQueryAdapter("RESET ROLE")), //
+        COMMENT_ON(YugabyteCommentGenerator::generate), //
+        RESET((g) -> new SQLQueryAdapter("RESET ALL") /*
+                                                       * https://www.postgres.org/docs/devel/sql-reset.html TODO: also
+                                                       * configuration parameter
+                                                       */), //
+        NOTIFY(YugabyteNotifyGenerator::createNotify), //
+        LISTEN((g) -> YugabyteNotifyGenerator.createListen()), //
+        UNLISTEN((g) -> YugabyteNotifyGenerator.createUnlisten()), //
+        CREATE_SEQUENCE(YugabyteSequenceGenerator::createSequence), //
+        CREATE_VIEW(YugabyteViewGenerator::create);
+
+        private final SQLQueryProvider<YugabyteGlobalState> sqlQueryProvider;
+
+        Action(SQLQueryProvider<YugabyteGlobalState> sqlQueryProvider) {
+            this.sqlQueryProvider = sqlQueryProvider;
+        }
+
+        @Override
+        public SQLQueryAdapter getQuery(YugabyteGlobalState state) throws Exception {
+            return sqlQueryProvider.getQuery(state);
+        }
     }
 
 }

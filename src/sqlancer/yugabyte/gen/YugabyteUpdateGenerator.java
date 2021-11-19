@@ -1,16 +1,16 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.List;
+
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
-import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteVisitor;
 import sqlancer.yugabyte.ast.YugabyteExpression;
-
-import java.util.List;
 
 public final class YugabyteUpdateGenerator {
 
@@ -30,7 +30,7 @@ public final class YugabyteUpdateGenerator {
                 "You might need to add explicit type casts.", "invalid regular expression",
                 "View columns that are not columns of their base relation are not updatable");
         errors.add("multiple assignments to same column"); // view whose columns refer to a column in the referenced
-                                                           // table multiple times
+        // table multiple times
         errors.add("new row violates check option for view");
         List<YugabyteColumn> columns = randomTable.getRandomNonEmptyColumnSubset();
         YugabyteCommon.addCommonInsertUpdateErrors(errors);

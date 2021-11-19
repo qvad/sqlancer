@@ -1,8 +1,8 @@
 package sqlancer.yugabyte;
 
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-
 import java.util.Optional;
+
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 
 public final class YugabyteCompoundDataType {
 
@@ -14,6 +14,14 @@ public final class YugabyteCompoundDataType {
         this.dataType = dataType;
         this.elemType = elemType;
         this.size = size;
+    }
+
+    public static YugabyteCompoundDataType create(YugabyteDataType type, int size) {
+        return new YugabyteCompoundDataType(type, null, size);
+    }
+
+    public static YugabyteCompoundDataType create(YugabyteDataType type) {
+        return new YugabyteCompoundDataType(type, null, null);
     }
 
     public YugabyteDataType getDataType() {
@@ -33,13 +41,5 @@ public final class YugabyteCompoundDataType {
         } else {
             return Optional.of(size);
         }
-    }
-
-    public static YugabyteCompoundDataType create(YugabyteDataType type, int size) {
-        return new YugabyteCompoundDataType(type, null, size);
-    }
-
-    public static YugabyteCompoundDataType create(YugabyteDataType type) {
-        return new YugabyteCompoundDataType(type, null, null);
     }
 }

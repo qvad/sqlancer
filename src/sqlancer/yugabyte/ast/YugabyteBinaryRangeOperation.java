@@ -9,45 +9,6 @@ public class YugabyteBinaryRangeOperation extends BinaryNode<YugabyteExpression>
 
     private final String op;
 
-    public enum YugabyteBinaryRangeOperator implements Operator {
-        UNION("*"), INTERSECTION("*"), DIFFERENCE("-");
-
-        private final String textRepresentation;
-
-        YugabyteBinaryRangeOperator(String textRepresentation) {
-            this.textRepresentation = textRepresentation;
-        }
-
-        @Override
-        public String getTextRepresentation() {
-            return textRepresentation;
-        }
-
-        public static YugabyteBinaryRangeOperator getRandom() {
-            return Randomly.fromOptions(values());
-        }
-
-    }
-
-    public enum YugabyteBinaryRangeComparisonOperator {
-        CONTAINS_RANGE_OR_ELEMENT("@>"), RANGE_OR_ELEMENT_IS_CONTAINED("<@"), OVERLAP("&&"), STRICT_LEFT_OF("<<"),
-        STRICT_RIGHT_OF(">>"), NOT_RIGHT_OF("&<"), NOT_LEFT_OF(">&"), ADJACENT("-|-");
-
-        private final String textRepresentation;
-
-        YugabyteBinaryRangeComparisonOperator(String textRepresentation) {
-            this.textRepresentation = textRepresentation;
-        }
-
-        public String getTextRepresentation() {
-            return textRepresentation;
-        }
-
-        public static YugabyteBinaryRangeComparisonOperator getRandom() {
-            return Randomly.fromOptions(values());
-        }
-    }
-
     public YugabyteBinaryRangeOperation(YugabyteBinaryRangeComparisonOperator op, YugabyteExpression left,
             YugabyteExpression right) {
         super(left, right);
@@ -68,6 +29,45 @@ public class YugabyteBinaryRangeOperation extends BinaryNode<YugabyteExpression>
     @Override
     public String getOperatorRepresentation() {
         return op;
+    }
+
+    public enum YugabyteBinaryRangeOperator implements Operator {
+        UNION("*"), INTERSECTION("*"), DIFFERENCE("-");
+
+        private final String textRepresentation;
+
+        YugabyteBinaryRangeOperator(String textRepresentation) {
+            this.textRepresentation = textRepresentation;
+        }
+
+        public static YugabyteBinaryRangeOperator getRandom() {
+            return Randomly.fromOptions(values());
+        }
+
+        @Override
+        public String getTextRepresentation() {
+            return textRepresentation;
+        }
+
+    }
+
+    public enum YugabyteBinaryRangeComparisonOperator {
+        CONTAINS_RANGE_OR_ELEMENT("@>"), RANGE_OR_ELEMENT_IS_CONTAINED("<@"), OVERLAP("&&"), STRICT_LEFT_OF("<<"),
+        STRICT_RIGHT_OF(">>"), NOT_RIGHT_OF("&<"), NOT_LEFT_OF(">&"), ADJACENT("-|-");
+
+        private final String textRepresentation;
+
+        YugabyteBinaryRangeComparisonOperator(String textRepresentation) {
+            this.textRepresentation = textRepresentation;
+        }
+
+        public static YugabyteBinaryRangeComparisonOperator getRandom() {
+            return Randomly.fromOptions(values());
+        }
+
+        public String getTextRepresentation() {
+            return textRepresentation;
+        }
     }
 
 }

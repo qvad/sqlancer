@@ -1,22 +1,22 @@
 package sqlancer.yugabyte.gen;
 
-import sqlancer.IgnoreMeException;
-import sqlancer.Randomly;
-import sqlancer.common.query.ExpectedErrors;
-import sqlancer.common.schema.AbstractTableColumn;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
-import sqlancer.yugabyte.YugabyteGlobalState;
-import sqlancer.yugabyte.YugabyteProvider;
-import sqlancer.yugabyte.YugabyteVisitor;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import sqlancer.IgnoreMeException;
+import sqlancer.Randomly;
+import sqlancer.common.query.ExpectedErrors;
+import sqlancer.common.schema.AbstractTableColumn;
+import sqlancer.yugabyte.YugabyteGlobalState;
+import sqlancer.yugabyte.YugabyteProvider;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
+import sqlancer.yugabyte.YugabyteVisitor;
 
 public final class YugabyteCommon {
 
@@ -55,7 +55,9 @@ public final class YugabyteCommon {
 
     public static void addCommonExpressionErrors(ExpectedErrors errors) {
         errors.add("syntax error at or near \"(\"");
-        errors.add("does not exists");
+        errors.add("does not exist");
+        errors.add("is not unique");
+        errors.add("invalid reference to FROM-clause entry for table");
 
         errors.add("Invalid column number");
         errors.add("specified more than once");
@@ -207,38 +209,6 @@ public final class YugabyteCommon {
         return serial;
     }
 
-    public enum TableConstraints {
-        CHECK, UNIQUE, PRIMARY_KEY, FOREIGN_KEY
-    }
-
-    private enum StorageParameters {
-        FILLFACTOR("fillfactor", (r) -> r.getInteger(10, 100)),
-        // toast_tuple_target
-//        PARALLEL_WORKERS("parallel_workers", (r) -> r.getInteger(0, 1024)),
-        AUTOVACUUM_ENABLED("autovacuum_enabled", (r) -> Randomly.fromOptions(0, 1)),
-//        AUTOVACUUM_VACUUM_THRESHOLD("autovacuum_vacuum_threshold", (r) -> r.getInteger(0, 2147483647)),
-        OIDS("oids", (r) -> Randomly.fromOptions(0, 1)),
-//        AUTOVACUUM_VACUUM_SCALE_FACTOR("autovacuum_vacuum_scale_factor",
-//                (r) -> Randomly.fromOptions(0, 0.00001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 1)),
-        AUTOVACUUM_ANALYZE_THRESHOLD("autovacuum_analyze_threshold", (r) -> r.getLong(0, Integer.MAX_VALUE)),
-        AUTOVACUUM_ANALYZE_SCALE_FACTOR("autovacuum_analyze_scale_factor",
-                (r) -> Randomly.fromOptions(0, 0.00001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 1)),
-        AUTOVACUUM_VACUUM_COST_DELAY("autovacuum_vacuum_cost_delay", (r) -> r.getLong(0, 100)),
-//        AUTOVACUUM_VACUUM_COST_LIMIT("autovacuum_vacuum_cost_limit", (r) -> r.getLong(1, 10000)),
-//        AUTOVACUUM_FREEZE_MIN_AGE("autovacuum_freeze_min_age", (r) -> r.getLong(0, 1000000000)),
-        AUTOVACUUM_FREEZE_MAX_AGE("autovacuum_freeze_max_age", (r) -> r.getLong(100000, 2000000000)),
-        AUTOVACUUM_FREEZE_TABLE_AGE("autovacuum_freeze_table_age", (r) -> r.getLong(0, 2000000000));
-        // TODO
-
-        private final String parameter;
-        private final Function<Randomly, Object> op;
-
-        StorageParameters(String parameter, Function<Randomly, Object> op) {
-            this.parameter = parameter;
-            this.op = op;
-        }
-    }
-
     public static void generateWith(StringBuilder sb, YugabyteGlobalState globalState, ExpectedErrors errors) {
         if (Randomly.getBoolean()) {
             sb.append(" WITH (");
@@ -261,7 +231,7 @@ public final class YugabyteCommon {
     }
 
     public static void addTableConstraints(boolean excludePrimaryKey, StringBuilder sb, YugabyteTable table,
-                                           YugabyteGlobalState globalState, ExpectedErrors errors) {
+            YugabyteGlobalState globalState, ExpectedErrors errors) {
         // TODO constraint name
         List<TableConstraints> tableConstraints = Randomly.nonEmptySubset(TableConstraints.values());
         if (excludePrimaryKey) {
@@ -297,19 +267,20 @@ public final class YugabyteCommon {
             break;
         case UNIQUE:
             sb.append("UNIQUE(");
-            sb.append(randomNonEmptyColumnSubset.stream().map(AbstractTableColumn::getName).collect(Collectors.joining(", ")));
+            sb.append(randomNonEmptyColumnSubset.stream().map(AbstractTableColumn::getName)
+                    .collect(Collectors.joining(", ")));
             sb.append(")");
-            appendIndexParameters(sb, globalState, errors);
             break;
         case PRIMARY_KEY:
             sb.append("PRIMARY KEY(");
-            sb.append(randomNonEmptyColumnSubset.stream().map(AbstractTableColumn::getName).collect(Collectors.joining(", ")));
+            sb.append(randomNonEmptyColumnSubset.stream().map(AbstractTableColumn::getName)
+                    .collect(Collectors.joining(", ")));
             sb.append(")");
-            appendIndexParameters(sb, globalState, errors);
             break;
         case FOREIGN_KEY:
             sb.append("FOREIGN KEY (");
-            sb.append(randomNonEmptyColumnSubset.stream().map(AbstractTableColumn::getName).collect(Collectors.joining(", ")));
+            sb.append(randomNonEmptyColumnSubset.stream().map(AbstractTableColumn::getName)
+                    .collect(Collectors.joining(", ")));
             sb.append(") REFERENCES ");
             YugabyteTable randomOtherTable = globalState.getSchema().getRandomTable(tab -> !tab.isView());
             sb.append(randomOtherTable.getName());
@@ -352,44 +323,6 @@ public final class YugabyteCommon {
         }
     }
 
-    private static void appendIndexParameters(StringBuilder sb, YugabyteGlobalState globalState,
-            ExpectedErrors errors) {
-//        if (Randomly.getBoolean()) {
-//            generateWith(sb, globalState, errors);
-//        }
-        // TODO: [ USING INDEX TABLESPACE tablespace ]
-    }
-
-    private static void appendOperator(StringBuilder sb, List<String> operators) {
-        sb.append(Randomly.fromList(operators));
-    }
-
-    // complete
-    private static void appendExcludeElement(StringBuilder sb, YugabyteGlobalState globalState,
-            List<YugabyteColumn> columns) {
-        if (Randomly.getBoolean()) {
-            // append column name
-            sb.append(Randomly.fromList(columns).getName());
-        } else {
-            // append expression
-            sb.append("(");
-            sb.append(YugabyteVisitor.asString(YugabyteExpressionGenerator.generateExpression(globalState, columns)));
-            sb.append(")");
-        }
-        if (Randomly.getBoolean()) {
-            sb.append(" ");
-            sb.append(Randomly.fromList(globalState.getOpClasses()));
-        }
-        if (Randomly.getBoolean()) {
-            sb.append(" ");
-            sb.append(Randomly.fromOptions("ASC", "DESC"));
-        }
-        if (Randomly.getBoolean()) {
-            sb.append(" NULLS ");
-            sb.append(Randomly.fromOptions("FIRST", "LAST"));
-        }
-    }
-
     private static void deleteOrUpdateAction(StringBuilder sb) {
         sb.append(Randomly.fromOptions("NO ACTION", "RESTRICT", "CASCADE", "SET NULL", "SET DEFAULT"));
     }
@@ -399,6 +332,38 @@ public final class YugabyteCommon {
         errors.add("must appear in the GROUP BY clause or be used in an aggregate function");
         errors.add("is not in select list");
         errors.add("aggregate functions are not allowed in GROUP BY");
+    }
+
+    public enum TableConstraints {
+        CHECK, UNIQUE, PRIMARY_KEY, FOREIGN_KEY
+    }
+
+    private enum StorageParameters {
+        FILLFACTOR("fillfactor", (r) -> r.getInteger(10, 100)),
+        // toast_tuple_target
+        // PARALLEL_WORKERS("parallel_workers", (r) -> r.getInteger(0, 1024)),
+        AUTOVACUUM_ENABLED("autovacuum_enabled", (r) -> Randomly.fromOptions(0, 1)),
+        // AUTOVACUUM_VACUUM_THRESHOLD("autovacuum_vacuum_threshold", (r) -> r.getInteger(0, 2147483647)),
+        OIDS("oids", (r) -> Randomly.fromOptions(0, 1)),
+        // AUTOVACUUM_VACUUM_SCALE_FACTOR("autovacuum_vacuum_scale_factor",
+        // (r) -> Randomly.fromOptions(0, 0.00001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 1)),
+        AUTOVACUUM_ANALYZE_THRESHOLD("autovacuum_analyze_threshold", (r) -> r.getLong(0, Integer.MAX_VALUE)),
+        AUTOVACUUM_ANALYZE_SCALE_FACTOR("autovacuum_analyze_scale_factor",
+                (r) -> Randomly.fromOptions(0, 0.00001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 1)),
+        AUTOVACUUM_VACUUM_COST_DELAY("autovacuum_vacuum_cost_delay", (r) -> r.getLong(0, 100)),
+        // AUTOVACUUM_VACUUM_COST_LIMIT("autovacuum_vacuum_cost_limit", (r) -> r.getLong(1, 10000)),
+        // AUTOVACUUM_FREEZE_MIN_AGE("autovacuum_freeze_min_age", (r) -> r.getLong(0, 1000000000)),
+        AUTOVACUUM_FREEZE_MAX_AGE("autovacuum_freeze_max_age", (r) -> r.getLong(100000, 2000000000)),
+        AUTOVACUUM_FREEZE_TABLE_AGE("autovacuum_freeze_table_age", (r) -> r.getLong(0, 2000000000));
+        // TODO
+
+        private final String parameter;
+        private final Function<Randomly, Object> op;
+
+        StorageParameters(String parameter, Function<Randomly, Object> op) {
+            this.parameter = parameter;
+            this.op = op;
+        }
     }
 
 }

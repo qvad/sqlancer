@@ -9,7 +9,7 @@ public class YugabyteSimilarTo implements YugabyteExpression {
     private final YugabyteExpression escapeCharacter;
 
     public YugabyteSimilarTo(YugabyteExpression string, YugabyteExpression similarTo,
-                             YugabyteExpression escapeCharacter) {
+            YugabyteExpression escapeCharacter) {
         this.string = string;
         this.similarTo = similarTo;
         this.escapeCharacter = escapeCharacter;

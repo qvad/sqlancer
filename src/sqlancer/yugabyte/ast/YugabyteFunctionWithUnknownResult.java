@@ -1,11 +1,10 @@
 package sqlancer.yugabyte.ast;
 
-import sqlancer.Randomly;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-import sqlancer.yugabyte.gen.YugabyteExpressionGenerator;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
+import sqlancer.yugabyte.gen.YugabyteExpressionGenerator;
 
 public enum YugabyteFunctionWithUnknownResult {
 
@@ -29,11 +28,10 @@ public enum YugabyteFunctionWithUnknownResult {
     CURRENT_SCHEMA("current_schema", YugabyteDataType.TEXT), // name
     // CURRENT_SCHEMAS("current_schemas", YugabyteDataType.TEXT, YugabyteDataType.BOOLEAN),
     INET_CLIENT_PORT("inet_client_port", YugabyteDataType.INT),
-    INET_SERVER_PORT("inet_server_port", YugabyteDataType.INT),
-    PG_BACKEND_PID("pg_backend_pid", YugabyteDataType.INT),
+    INET_SERVER_PORT("inet_server_port", YugabyteDataType.INT), PG_BACKEND_PID("pg_backend_pid", YugabyteDataType.INT),
     PG_CURRENT_LOGFILE("pg_current_logfile", YugabyteDataType.TEXT),
-//    PG_IS_OTHER_TEMP_SCHEMA("pg_is_other_temp_schema", YugabyteDataType.BOOLEAN),
-//    PG_JIT_AVAILABLE("pg_is_other_temp_schema", YugabyteDataType.BOOLEAN),
+    // PG_IS_OTHER_TEMP_SCHEMA("pg_is_other_temp_schema", YugabyteDataType.BOOLEAN),
+    // PG_JIT_AVAILABLE("pg_is_other_temp_schema", YugabyteDataType.BOOLEAN),
     PG_NOTIFICATION_QUEUE_USAGE("pg_notification_queue_usage", YugabyteDataType.REAL),
     PG_TRIGGER_DEPTH("pg_trigger_depth", YugabyteDataType.INT), VERSION("version", YugabyteDataType.TEXT),
 
@@ -41,7 +39,7 @@ public enum YugabyteFunctionWithUnknownResult {
     TO_CHAR("to_char", YugabyteDataType.TEXT, YugabyteDataType.BYTEA, YugabyteDataType.TEXT) {
         @Override
         public YugabyteExpression[] getArguments(YugabyteDataType returnType, YugabyteExpressionGenerator gen,
-                                                 int depth) {
+                int depth) {
             YugabyteExpression[] args = super.getArguments(returnType, gen, depth);
             args[0] = gen.generateExpression(YugabyteDataType.getRandomType());
             return args;
@@ -55,7 +53,7 @@ public enum YugabyteFunctionWithUnknownResult {
     CONVERT_FROM("convert_from", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT) {
         @Override
         public YugabyteExpression[] getArguments(YugabyteDataType returnType, YugabyteExpressionGenerator gen,
-                                                 int depth) {
+                int depth) {
             YugabyteExpression[] args = super.getArguments(returnType, gen, depth);
             args[1] = YugabyteConstant.createTextConstant("UTF8");
             return args;
@@ -72,7 +70,8 @@ public enum YugabyteFunctionWithUnknownResult {
     // PG_CLIENT_ENCODING("pg_client_encoding", YugabyteDataType.TEXT),
     QUOTE_LITERAL("quote_literal", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     QUOTE_IDENT("quote_ident", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
-    REGEX_REPLACE("regexp_replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT),
+    REGEX_REPLACE("regexp_replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT,
+            YugabyteDataType.TEXT),
     REPEAT("repeat", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.INT),
     REPLACE("replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     REVERSE("reverse", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
@@ -154,6 +153,16 @@ public enum YugabyteFunctionWithUnknownResult {
         this.argTypes = indexType.clone();
     }
 
+    public static List<YugabyteFunctionWithUnknownResult> getSupportedFunctions(YugabyteDataType type) {
+        List<YugabyteFunctionWithUnknownResult> functions = new ArrayList<>();
+        for (YugabyteFunctionWithUnknownResult func : values()) {
+            if (func.isCompatibleWithReturnType(type)) {
+                functions.add(func);
+            }
+        }
+        return functions;
+    }
+
     public boolean isCompatibleWithReturnType(YugabyteDataType t) {
         return t == returnType;
     }
@@ -169,16 +178,6 @@ public enum YugabyteFunctionWithUnknownResult {
 
     public String getName() {
         return functionName;
-    }
-
-    public static List<YugabyteFunctionWithUnknownResult> getSupportedFunctions(YugabyteDataType type) {
-        List<YugabyteFunctionWithUnknownResult> functions = new ArrayList<>();
-        for (YugabyteFunctionWithUnknownResult func : values()) {
-            if (func.isCompatibleWithReturnType(type)) {
-                functions.add(func);
-            }
-        }
-        return functions;
     }
 
 }

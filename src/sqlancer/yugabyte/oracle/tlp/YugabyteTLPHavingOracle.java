@@ -1,16 +1,16 @@
 package sqlancer.yugabyte.oracle.tlp;
 
-import sqlancer.ComparatorHelper;
-import sqlancer.Randomly;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-import sqlancer.yugabyte.YugabyteGlobalState;
-import sqlancer.yugabyte.YugabyteVisitor;
-import sqlancer.yugabyte.ast.YugabyteExpression;
-import sqlancer.yugabyte.gen.YugabyteCommon;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import sqlancer.ComparatorHelper;
+import sqlancer.Randomly;
+import sqlancer.yugabyte.YugabyteGlobalState;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
+import sqlancer.yugabyte.YugabyteVisitor;
+import sqlancer.yugabyte.ast.YugabyteExpression;
+import sqlancer.yugabyte.gen.YugabyteCommon;
 
 public class YugabyteTLPHavingOracle extends YugabyteTLPBase {
 
@@ -23,6 +23,14 @@ public class YugabyteTLPHavingOracle extends YugabyteTLPBase {
     public void check() throws SQLException {
         super.check();
         havingCheck();
+    }
+
+    @Override
+    List<YugabyteExpression> generateFetchColumns() {
+        List<YugabyteExpression> expressions = gen.allowAggregates(true)
+                .generateExpressions(Randomly.smallNumber() + 1);
+        gen.allowAggregates(false);
+        return expressions;
     }
 
     protected void havingCheck() throws SQLException {
@@ -54,14 +62,6 @@ public class YugabyteTLPHavingOracle extends YugabyteTLPBase {
     @Override
     protected YugabyteExpression generatePredicate() {
         return gen.generateHavingClause();
-    }
-
-    @Override
-    List<YugabyteExpression> generateFetchColumns() {
-        List<YugabyteExpression> expressions = gen.allowAggregates(true)
-                .generateExpressions(Randomly.smallNumber() + 1);
-        gen.allowAggregates(false);
-        return expressions;
     }
 
 }

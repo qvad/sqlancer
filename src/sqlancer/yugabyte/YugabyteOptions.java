@@ -1,7 +1,13 @@
 package sqlancer.yugabyte;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+
 import sqlancer.DBMSSpecificOptions;
 import sqlancer.OracleFactory;
 import sqlancer.common.oracle.CompositeTestOracle;
@@ -12,11 +18,6 @@ import sqlancer.yugabyte.oracle.YugabytePivotedQuerySynthesisOracle;
 import sqlancer.yugabyte.oracle.tlp.YugabyteTLPAggregateOracle;
 import sqlancer.yugabyte.oracle.tlp.YugabyteTLPHavingOracle;
 import sqlancer.yugabyte.oracle.tlp.YugabyteTLPWhereOracle;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @Parameters(separators = "=", commandDescription = "YSQL (default port: " + YugabyteOptions.DEFAULT_PORT
         + ", default host: " + YugabyteOptions.DEFAULT_HOST)
@@ -37,6 +38,11 @@ public class YugabyteOptions implements DBMSSpecificOptions<YugabyteOracleFactor
     public String connectionURL = String.format("jdbc:postgresql://%s:%d/yugabyte", YugabyteOptions.DEFAULT_HOST,
             YugabyteOptions.DEFAULT_PORT);
 
+    @Override
+    public List<YugabyteOracleFactory> getTestOracleFactory() {
+        return oracle;
+    }
+
     public enum YugabyteOracleFactory implements OracleFactory<YugabyteGlobalState> {
         NOREC {
             @Override
@@ -56,7 +62,6 @@ public class YugabyteOptions implements DBMSSpecificOptions<YugabyteOracleFactor
             }
         },
         HAVING {
-
             @Override
             public TestOracle create(YugabyteGlobalState globalState) throws SQLException {
                 return new YugabyteTLPHavingOracle(globalState);
@@ -72,13 +77,8 @@ public class YugabyteOptions implements DBMSSpecificOptions<YugabyteOracleFactor
                 oracles.add(new YugabyteTLPAggregateOracle(globalState));
                 return new CompositeTestOracle(oracles, globalState);
             }
-        };
+        }
 
-    }
-
-    @Override
-    public List<YugabyteOracleFactory> getTestOracleFactory() {
-        return oracle;
     }
 
 }

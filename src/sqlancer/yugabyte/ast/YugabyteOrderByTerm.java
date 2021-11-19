@@ -8,14 +8,6 @@ public class YugabyteOrderByTerm implements YugabyteExpression {
     private final YugabyteOrder order;
     private final YugabyteExpression expr;
 
-    public enum YugabyteOrder {
-        ASC, DESC;
-
-        public static YugabyteOrder getRandomOrder() {
-            return Randomly.fromOptions(YugabyteOrder.values());
-        }
-    }
-
     public YugabyteOrderByTerm(YugabyteExpression expr, YugabyteOrder order) {
         this.expr = expr;
         this.order = order;
@@ -30,13 +22,21 @@ public class YugabyteOrderByTerm implements YugabyteExpression {
     }
 
     @Override
+    public YugabyteDataType getExpressionType() {
+        return null;
+    }
+
+    @Override
     public YugabyteConstant getExpectedValue() {
         throw new AssertionError(this);
     }
 
-    @Override
-    public YugabyteDataType getExpressionType() {
-        return null;
+    public enum YugabyteOrder {
+        ASC, DESC;
+
+        public static YugabyteOrder getRandomOrder() {
+            return Randomly.fromOptions(YugabyteOrder.values());
+        }
     }
 
 }

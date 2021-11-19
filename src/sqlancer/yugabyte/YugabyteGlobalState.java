@@ -1,25 +1,29 @@
 package sqlancer.yugabyte;
 
-import sqlancer.Randomly;
-import sqlancer.SQLConnection;
-import sqlancer.SQLGlobalState;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import sqlancer.Randomly;
+import sqlancer.SQLConnection;
+import sqlancer.SQLGlobalState;
 
 public class YugabyteGlobalState extends SQLGlobalState<YugabyteOptions, YugabyteSchema> {
 
     public static final char IMMUTABLE = 'i';
     public static final char STABLE = 's';
     public static final char VOLATILE = 'v';
-
+    // store and allow filtering by function volatility classifications
+    private final Map<String, Character> functionsAndTypes = new HashMap<>();
     private List<String> operators = Collections.emptyList();
     private List<String> collates = Collections.emptyList();
     private List<String> opClasses = Collections.emptyList();
-    // store and allow filtering by function volatility classifications
-    private final Map<String, Character> functionsAndTypes = new HashMap<>();
     private List<Character> allowedFunctionTypes = Arrays.asList(IMMUTABLE, STABLE, VOLATILE);
 
     @Override
@@ -32,6 +36,11 @@ public class YugabyteGlobalState extends SQLGlobalState<YugabyteOptions, Yugabyt
         } catch (SQLException e) {
             throw new AssertionError(e);
         }
+    }
+
+    @Override
+    public YugabyteSchema readSchema() throws SQLException {
+        return YugabyteSchema.fromConnection(getConnection(), getDatabaseName());
     }
 
     private List<String> getCollnames(SQLConnection con) throws SQLException {
@@ -95,11 +104,6 @@ public class YugabyteGlobalState extends SQLGlobalState<YugabyteOptions, Yugabyt
         return Randomly.fromList(opClasses);
     }
 
-    @Override
-    public YugabyteSchema readSchema() throws SQLException {
-        return YugabyteSchema.fromConnection(getConnection(), getDatabaseName());
-    }
-
     public void addFunctionAndType(String functionName, Character functionType) {
         this.functionsAndTypes.put(functionName, functionType);
     }
@@ -108,16 +112,16 @@ public class YugabyteGlobalState extends SQLGlobalState<YugabyteOptions, Yugabyt
         return this.functionsAndTypes;
     }
 
-    public void setAllowedFunctionTypes(List<Character> types) {
-        this.allowedFunctionTypes = types;
-    }
-
     public void setDefaultAllowedFunctionTypes() {
         this.allowedFunctionTypes = Arrays.asList(IMMUTABLE, STABLE, VOLATILE);
     }
 
     public List<Character> getAllowedFunctionTypes() {
         return this.allowedFunctionTypes;
+    }
+
+    public void setAllowedFunctionTypes(List<Character> types) {
+        this.allowedFunctionTypes = types;
     }
 
 }

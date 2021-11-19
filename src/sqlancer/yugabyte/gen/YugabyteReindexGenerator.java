@@ -1,22 +1,18 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import sqlancer.IgnoreMeException;
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteIndex;
 import sqlancer.yugabyte.YugabyteGlobalState;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteIndex;
 
 public final class YugabyteReindexGenerator {
 
     private YugabyteReindexGenerator() {
-    }
-
-    private enum Scope {
-        INDEX, TABLE, DATABASE;
     }
 
     public static SQLQueryAdapter create(YugabyteGlobalState globalState) {
@@ -53,6 +49,10 @@ public final class YugabyteReindexGenerator {
         errors.add("does not exist"); // internal index
         errors.add("REINDEX is not yet implemented for partitioned indexes");
         return new SQLQueryAdapter(sb.toString(), errors);
+    }
+
+    private enum Scope {
+        INDEX, TABLE, DATABASE
     }
 
 }

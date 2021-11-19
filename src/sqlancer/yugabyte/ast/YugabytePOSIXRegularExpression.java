@@ -6,33 +6,9 @@ import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 
 public class YugabytePOSIXRegularExpression implements YugabyteExpression {
 
-    private YugabyteExpression string;
-    private YugabyteExpression regex;
-    private POSIXRegex op;
-
-    public enum POSIXRegex implements Operator {
-        MATCH_CASE_SENSITIVE("~"), MATCH_CASE_INSENSITIVE("~*"), NOT_MATCH_CASE_SENSITIVE("!~"),
-        NOT_MATCH_CASE_INSENSITIVE("!~*");
-
-        private String repr;
-
-        POSIXRegex(String repr) {
-            this.repr = repr;
-        }
-
-        public String getStringRepresentation() {
-            return repr;
-        }
-
-        public static POSIXRegex getRandom() {
-            return Randomly.fromOptions(values());
-        }
-
-        @Override
-        public String getTextRepresentation() {
-            return toString();
-        }
-    }
+    private final YugabyteExpression string;
+    private final YugabyteExpression regex;
+    private final POSIXRegex op;
 
     public YugabytePOSIXRegularExpression(YugabyteExpression string, YugabyteExpression regex, POSIXRegex op) {
         this.string = string;
@@ -60,6 +36,30 @@ public class YugabytePOSIXRegularExpression implements YugabyteExpression {
 
     public POSIXRegex getOp() {
         return op;
+    }
+
+    public enum POSIXRegex implements Operator {
+        MATCH_CASE_SENSITIVE("~"), MATCH_CASE_INSENSITIVE("~*"), NOT_MATCH_CASE_SENSITIVE("!~"),
+        NOT_MATCH_CASE_INSENSITIVE("!~*");
+
+        private final String repr;
+
+        POSIXRegex(String repr) {
+            this.repr = repr;
+        }
+
+        public static POSIXRegex getRandom() {
+            return Randomly.fromOptions(values());
+        }
+
+        public String getStringRepresentation() {
+            return repr;
+        }
+
+        @Override
+        public String getTextRepresentation() {
+            return toString();
+        }
     }
 
 }

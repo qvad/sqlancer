@@ -12,7 +12,7 @@ public final class YugabyteBetweenOperation implements YugabyteExpression {
     private final boolean isSymmetric;
 
     public YugabyteBetweenOperation(YugabyteExpression expr, YugabyteExpression left, YugabyteExpression right,
-                                    boolean symmetric) {
+            boolean symmetric) {
         this.expr = expr;
         this.left = left;
         this.right = right;
@@ -36,6 +36,11 @@ public final class YugabyteBetweenOperation implements YugabyteExpression {
     }
 
     @Override
+    public YugabyteDataType getExpressionType() {
+        return YugabyteDataType.BOOLEAN;
+    }
+
+    @Override
     public YugabyteConstant getExpectedValue() {
         YugabyteBinaryComparisonOperation leftComparison = new YugabyteBinaryComparisonOperation(left, expr,
                 YugabyteBinaryComparisonOperator.LESS_EQUALS);
@@ -56,11 +61,6 @@ public final class YugabyteBetweenOperation implements YugabyteExpression {
         } else {
             return andOperation.getExpectedValue();
         }
-    }
-
-    @Override
-    public YugabyteDataType getExpressionType() {
-        return YugabyteDataType.BOOLEAN;
     }
 
 }

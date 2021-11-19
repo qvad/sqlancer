@@ -3,8 +3,8 @@ package sqlancer.yugabyte.gen;
 import sqlancer.IgnoreMeException;
 import sqlancer.Randomly;
 import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 import sqlancer.yugabyte.YugabyteGlobalState;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 
 /**
  * @see <a href="https://www.postgresql.org/docs/devel/sql-comment.html">COMMENT</a>
@@ -12,10 +12,6 @@ import sqlancer.yugabyte.YugabyteGlobalState;
 public final class YugabyteCommentGenerator {
 
     private YugabyteCommentGenerator() {
-    }
-
-    private enum Action {
-        INDEX, COLUMN, STATISTICS, TABLE
     }
 
     public static SQLQueryAdapter generate(YugabyteGlobalState globalState) {
@@ -63,6 +59,10 @@ public final class YugabyteCommentGenerator {
             sb.append("'");
         }
         return new SQLQueryAdapter(sb.toString());
+    }
+
+    private enum Action {
+        INDEX, COLUMN, STATISTICS, TABLE
     }
 
 }

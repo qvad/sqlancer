@@ -1,17 +1,17 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
 import sqlancer.common.schema.AbstractTableColumn;
+import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
-import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteVisitor;
 import sqlancer.yugabyte.ast.YugabyteExpression;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public final class YugabyteInsertGenerator {
 
@@ -101,7 +101,7 @@ public final class YugabyteInsertGenerator {
     }
 
     private static void insertRow(YugabyteGlobalState globalState, StringBuilder sb, List<YugabyteColumn> columns,
-                                  boolean canBeDefault) {
+            boolean canBeDefault) {
         sb.append("(");
         for (int i = 0; i < columns.size(); i++) {
             if (i != 0) {

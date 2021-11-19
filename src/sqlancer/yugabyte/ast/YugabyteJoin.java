@@ -5,15 +5,6 @@ import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 
 public class YugabyteJoin implements YugabyteExpression {
 
-    public enum YugabyteJoinType {
-        INNER, LEFT, RIGHT, FULL, CROSS;
-
-        public static YugabyteJoinType getRandom() {
-            return Randomly.fromOptions(values());
-        }
-
-    }
-
     private final YugabyteExpression tableReference;
     private final YugabyteExpression onClause;
     private final YugabyteJoinType type;
@@ -44,6 +35,15 @@ public class YugabyteJoin implements YugabyteExpression {
     @Override
     public YugabyteConstant getExpectedValue() {
         throw new AssertionError();
+    }
+
+    public enum YugabyteJoinType {
+        INNER, LEFT, RIGHT, FULL, CROSS;
+
+        public static YugabyteJoinType getRandom() {
+            return Randomly.fromOptions(values());
+        }
+
     }
 
 }

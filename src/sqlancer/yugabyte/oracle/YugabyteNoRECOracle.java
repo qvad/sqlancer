@@ -1,28 +1,5 @@
 package sqlancer.yugabyte.oracle;
 
-import sqlancer.IgnoreMeException;
-import sqlancer.Randomly;
-import sqlancer.common.oracle.NoRECBase;
-import sqlancer.common.oracle.TestOracle;
-import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.common.query.SQLancerResultSet;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteTables;
-import sqlancer.yugabyte.ast.YugabyteJoin.YugabyteJoinType;
-import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteFromTable;
-import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteSubquery;
-import sqlancer.yugabyte.ast.YugabyteSelect.SelectType;
-import sqlancer.yugabyte.YugabyteCompoundDataType;
-import sqlancer.yugabyte.YugabyteGlobalState;
-import sqlancer.yugabyte.YugabyteSchema;
-import sqlancer.yugabyte.YugabyteVisitor;
-import sqlancer.yugabyte.ast.*;
-import sqlancer.yugabyte.gen.YugabyteCommon;
-import sqlancer.yugabyte.gen.YugabyteExpressionGenerator;
-import sqlancer.yugabyte.oracle.tlp.YugabyteTLPBase;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -31,6 +8,34 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import sqlancer.IgnoreMeException;
+import sqlancer.Randomly;
+import sqlancer.common.oracle.NoRECBase;
+import sqlancer.common.oracle.TestOracle;
+import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.common.query.SQLancerResultSet;
+import sqlancer.yugabyte.YugabyteCompoundDataType;
+import sqlancer.yugabyte.YugabyteGlobalState;
+import sqlancer.yugabyte.YugabyteSchema;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteTables;
+import sqlancer.yugabyte.YugabyteVisitor;
+import sqlancer.yugabyte.ast.YugabyteCastOperation;
+import sqlancer.yugabyte.ast.YugabyteColumnValue;
+import sqlancer.yugabyte.ast.YugabyteExpression;
+import sqlancer.yugabyte.ast.YugabyteJoin;
+import sqlancer.yugabyte.ast.YugabyteJoin.YugabyteJoinType;
+import sqlancer.yugabyte.ast.YugabytePostfixText;
+import sqlancer.yugabyte.ast.YugabyteSelect;
+import sqlancer.yugabyte.ast.YugabyteSelect.SelectType;
+import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteFromTable;
+import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteSubquery;
+import sqlancer.yugabyte.gen.YugabyteCommon;
+import sqlancer.yugabyte.gen.YugabyteExpressionGenerator;
+import sqlancer.yugabyte.oracle.tlp.YugabyteTLPBase;
 
 public class YugabyteNoRECOracle extends NoRECBase<YugabyteGlobalState> implements TestOracle {
 
@@ -41,6 +46,31 @@ public class YugabyteNoRECOracle extends NoRECBase<YugabyteGlobalState> implemen
         this.s = globalState.getSchema();
         YugabyteCommon.addCommonExpressionErrors(errors);
         YugabyteCommon.addCommonFetchErrors(errors);
+    }
+
+    public static List<YugabyteJoin> getJoinStatements(YugabyteGlobalState globalState, List<YugabyteColumn> columns,
+            List<YugabyteTable> tables) {
+        List<YugabyteJoin> joinStatements = new ArrayList<>();
+        YugabyteExpressionGenerator gen = new YugabyteExpressionGenerator(globalState).setColumns(columns);
+        for (int i = 1; i < tables.size(); i++) {
+            YugabyteExpression joinClause = gen.generateExpression(YugabyteDataType.BOOLEAN);
+            YugabyteTable table = Randomly.fromList(tables);
+            tables.remove(table);
+            YugabyteJoinType options = YugabyteJoinType.getRandom();
+            YugabyteJoin j = new YugabyteJoin(new YugabyteFromTable(table, Randomly.getBoolean()), joinClause, options);
+            joinStatements.add(j);
+        }
+        // JOIN subqueries
+        for (int i = 0; i < Randomly.smallNumber(); i++) {
+            YugabyteTables subqueryTables = globalState.getSchema().getRandomTableNonEmptyTables();
+            YugabyteSubquery subquery = YugabyteTLPBase.createSubquery(globalState, String.format("sub%d", i),
+                    subqueryTables);
+            YugabyteExpression joinClause = gen.generateExpression(YugabyteDataType.BOOLEAN);
+            YugabyteJoinType options = YugabyteJoinType.getRandom();
+            YugabyteJoin j = new YugabyteJoin(subquery, joinClause, options);
+            joinStatements.add(j);
+        }
+        return joinStatements;
     }
 
     @Override
@@ -70,37 +100,12 @@ public class YugabyteNoRECOracle extends NoRECBase<YugabyteGlobalState> implemen
         }
     }
 
-    public static List<YugabyteJoin> getJoinStatements(YugabyteGlobalState globalState, List<YugabyteColumn> columns,
-                                                       List<YugabyteTable> tables) {
-        List<YugabyteJoin> joinStatements = new ArrayList<>();
-        YugabyteExpressionGenerator gen = new YugabyteExpressionGenerator(globalState).setColumns(columns);
-        for (int i = 1; i < tables.size(); i++) {
-            YugabyteExpression joinClause = gen.generateExpression(YugabyteDataType.BOOLEAN);
-            YugabyteTable table = Randomly.fromList(tables);
-            tables.remove(table);
-            YugabyteJoinType options = YugabyteJoinType.getRandom();
-            YugabyteJoin j = new YugabyteJoin(new YugabyteFromTable(table, Randomly.getBoolean()), joinClause, options);
-            joinStatements.add(j);
-        }
-        // JOIN subqueries
-        for (int i = 0; i < Randomly.smallNumber(); i++) {
-            YugabyteTables subqueryTables = globalState.getSchema().getRandomTableNonEmptyTables();
-            YugabyteSubquery subquery = YugabyteTLPBase.createSubquery(globalState, String.format("sub%d", i),
-                    subqueryTables);
-            YugabyteExpression joinClause = gen.generateExpression(YugabyteDataType.BOOLEAN);
-            YugabyteJoinType options = YugabyteJoinType.getRandom();
-            YugabyteJoin j = new YugabyteJoin(subquery, joinClause, options);
-            joinStatements.add(j);
-        }
-        return joinStatements;
-    }
-
     private YugabyteExpression getRandomWhereCondition(List<YugabyteColumn> columns) {
         return new YugabyteExpressionGenerator(state).setColumns(columns).generateExpression(YugabyteDataType.BOOLEAN);
     }
 
     private int getUnoptimizedQueryCount(List<YugabyteExpression> fromTables, YugabyteExpression randomWhereCondition,
-                                         List<YugabyteJoin> joinStatements) throws SQLException {
+            List<YugabyteJoin> joinStatements) throws SQLException {
         YugabyteSelect select = new YugabyteSelect();
         YugabyteCastOperation isTrue = new YugabyteCastOperation(randomWhereCondition,
                 YugabyteCompoundDataType.create(YugabyteDataType.INT));
@@ -133,7 +138,7 @@ public class YugabyteNoRECOracle extends NoRECBase<YugabyteGlobalState> implemen
     }
 
     private int getOptimizedQueryCount(List<YugabyteExpression> randomTables, List<YugabyteColumn> columns,
-                                       YugabyteExpression randomWhereCondition, List<YugabyteJoin> joinStatements) throws SQLException {
+            YugabyteExpression randomWhereCondition, List<YugabyteJoin> joinStatements) throws SQLException {
         YugabyteSelect select = new YugabyteSelect();
         YugabyteColumnValue allColumns = new YugabyteColumnValue(Randomly.fromList(columns), null);
         select.setFetchColumns(Arrays.asList(allColumns));

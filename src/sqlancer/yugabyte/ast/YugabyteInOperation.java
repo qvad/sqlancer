@@ -1,8 +1,8 @@
 package sqlancer.yugabyte.ast;
 
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-
 import java.util.List;
+
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 
 public class YugabyteInOperation implements YugabyteExpression {
 
@@ -22,6 +22,15 @@ public class YugabyteInOperation implements YugabyteExpression {
 
     public List<YugabyteExpression> getListElements() {
         return listElements;
+    }
+
+    public boolean isTrue() {
+        return isTrue;
+    }
+
+    @Override
+    public YugabyteDataType getExpressionType() {
+        return YugabyteDataType.BOOLEAN;
     }
 
     @Override
@@ -52,14 +61,5 @@ public class YugabyteInOperation implements YugabyteExpression {
         } else {
             return YugabyteConstant.createBooleanConstant(!isTrue);
         }
-    }
-
-    public boolean isTrue() {
-        return isTrue;
-    }
-
-    @Override
-    public YugabyteDataType getExpressionType() {
-        return YugabyteDataType.BOOLEAN;
     }
 }

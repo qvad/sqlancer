@@ -1,15 +1,30 @@
 package sqlancer.yugabyte;
 
+import java.util.Optional;
+
 import sqlancer.Randomly;
 import sqlancer.common.visitor.BinaryOperation;
 import sqlancer.common.visitor.ToStringVisitor;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
+import sqlancer.yugabyte.ast.YugabyteAggregate;
+import sqlancer.yugabyte.ast.YugabyteBetweenOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryLogicalOperation;
+import sqlancer.yugabyte.ast.YugabyteCastOperation;
+import sqlancer.yugabyte.ast.YugabyteColumnValue;
+import sqlancer.yugabyte.ast.YugabyteConstant;
+import sqlancer.yugabyte.ast.YugabyteExpression;
+import sqlancer.yugabyte.ast.YugabyteFunction;
+import sqlancer.yugabyte.ast.YugabyteInOperation;
+import sqlancer.yugabyte.ast.YugabyteJoin;
 import sqlancer.yugabyte.ast.YugabyteJoin.YugabyteJoinType;
+import sqlancer.yugabyte.ast.YugabyteOrderByTerm;
+import sqlancer.yugabyte.ast.YugabytePOSIXRegularExpression;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation;
+import sqlancer.yugabyte.ast.YugabytePostfixText;
+import sqlancer.yugabyte.ast.YugabytePrefixOperation;
+import sqlancer.yugabyte.ast.YugabyteSelect;
 import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteFromTable;
 import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteSubquery;
-import sqlancer.yugabyte.ast.*;
-
-import java.util.Optional;
+import sqlancer.yugabyte.ast.YugabyteSimilarTo;
 
 public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpression> implements YugabyteVisitor {
 
@@ -19,13 +34,13 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
     }
 
     @Override
-    public void visit(YugabyteConstant constant) {
-        sb.append(constant.getTextRepresentation());
+    public String get() {
+        return sb.toString();
     }
 
     @Override
-    public String get() {
-        return sb.toString();
+    public void visit(YugabyteConstant constant) {
+        sb.append(constant.getTextRepresentation());
     }
 
     @Override
@@ -48,25 +63,6 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
         sb.append(" (");
         visit(op.getExpression());
         sb.append(")");
-    }
-
-    @Override
-    public void visit(YugabyteFromTable from) {
-        if (from.isOnly()) {
-            sb.append("ONLY ");
-        }
-        sb.append(from.getTable().getName());
-        if (!from.isOnly() && Randomly.getBoolean()) {
-            sb.append("*");
-        }
-    }
-
-    @Override
-    public void visit(YugabyteSubquery subquery) {
-        sb.append("(");
-        visit(subquery.getSelect());
-        sb.append(") AS ");
-        sb.append(subquery.getName());
     }
 
     @Override
@@ -192,59 +188,6 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
         }
     }
 
-    private void appendType(YugabyteCastOperation cast) {
-        YugabyteCompoundDataType compoundType = cast.getCompoundType();
-        switch (compoundType.getDataType()) {
-        case BOOLEAN:
-            sb.append("BOOLEAN");
-            break;
-        case INT: // TODO support also other int types
-            sb.append("INT");
-            break;
-        case TEXT:
-            // TODO: append TEXT, CHAR
-            sb.append(Randomly.fromOptions("VARCHAR"));
-            break;
-        case REAL:
-            sb.append("FLOAT");
-            break;
-        case DECIMAL:
-            sb.append("DECIMAL");
-            break;
-        case FLOAT:
-            sb.append("REAL");
-            break;
-        case RANGE:
-            sb.append("int4range");
-            break;
-        case MONEY:
-            sb.append("MONEY");
-            break;
-        case INET:
-            sb.append("INET");
-            break;
-        case BIT:
-            sb.append("BIT");
-            break;
-        case BYTEA:
-            sb.append("BYTEA");
-            break;
-            // if (Randomly.getBoolean()) {
-            // sb.append("(");
-            // sb.append(Randomly.getNotCachedInteger(1, 100));
-            // sb.append(")");
-            // }
-        default:
-            throw new AssertionError(cast.getType());
-        }
-        Optional<Integer> size = compoundType.getSize();
-        if (size.isPresent()) {
-            sb.append("(");
-            sb.append(size.get());
-            sb.append(")");
-        }
-    }
-
     @Override
     public void visit(YugabyteBetweenOperation op) {
         sb.append("(");
@@ -307,8 +250,80 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
     }
 
     @Override
+    public void visit(YugabyteFromTable from) {
+        if (from.isOnly()) {
+            sb.append("ONLY ");
+        }
+        sb.append(from.getTable().getName());
+        if (!from.isOnly() && Randomly.getBoolean()) {
+            sb.append("*");
+        }
+    }
+
+    @Override
+    public void visit(YugabyteSubquery subquery) {
+        sb.append("(");
+        visit(subquery.getSelect());
+        sb.append(") AS ");
+        sb.append(subquery.getName());
+    }
+
+    @Override
     public void visit(YugabyteBinaryLogicalOperation op) {
         super.visit((BinaryOperation<YugabyteExpression>) op);
+    }
+
+    private void appendType(YugabyteCastOperation cast) {
+        YugabyteCompoundDataType compoundType = cast.getCompoundType();
+        switch (compoundType.getDataType()) {
+        case BOOLEAN:
+            sb.append("BOOLEAN");
+            break;
+        case INT: // TODO support also other int types
+            sb.append("INT");
+            break;
+        case TEXT:
+            // TODO: append TEXT, CHAR
+            sb.append(Randomly.fromOptions("VARCHAR"));
+            break;
+        case REAL:
+            sb.append("FLOAT");
+            break;
+        case DECIMAL:
+            sb.append("DECIMAL");
+            break;
+        case FLOAT:
+            sb.append("REAL");
+            break;
+        case RANGE:
+            sb.append("int4range");
+            break;
+        case MONEY:
+            sb.append("MONEY");
+            break;
+        case INET:
+            sb.append("INET");
+            break;
+        case BIT:
+            sb.append("BIT");
+            break;
+        case BYTEA:
+            sb.append("BYTEA");
+            break;
+        // if (Randomly.getBoolean()) {
+        // sb.append("(");
+        // sb.append(Randomly.getNotCachedInteger(1, 100));
+        // sb.append(")");
+        // }
+        default:
+            throw new AssertionError(cast.getType());
+        }
+        Optional<Integer> size = compoundType.getSize();
+        if (size.isPresent()) {
+            sb.append("(");
+            sb.append(size.get());
+            sb.append(")");
+        }
     }
 
 }

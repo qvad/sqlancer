@@ -1,16 +1,36 @@
 package sqlancer.yugabyte.gen;
 
-import sqlancer.Randomly;
-import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.yugabyte.YugabyteGlobalState;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Function;
 
+import sqlancer.Randomly;
+import sqlancer.common.query.SQLQueryAdapter;
+import sqlancer.yugabyte.YugabyteGlobalState;
+
 public final class YugabyteSetGenerator {
 
     private YugabyteSetGenerator() {
+    }
+
+    public static SQLQueryAdapter create(YugabyteGlobalState globalState) {
+        StringBuilder sb = new StringBuilder();
+        ArrayList<ConfigurationOption> options = new ArrayList<>(Arrays.asList(ConfigurationOption.values()));
+        options.remove(ConfigurationOption.DEFAULT_WITH_OIDS);
+        ConfigurationOption option = Randomly.fromList(options);
+        sb.append("SET ");
+        if (Randomly.getBoolean()) {
+            sb.append(Randomly.fromOptions("SESSION", "LOCAL"));
+            sb.append(" ");
+        }
+        sb.append(option.optionName);
+        sb.append("=");
+        if (Randomly.getBoolean()) {
+            sb.append("DEFAULT");
+        } else {
+            sb.append(option.op.apply(globalState.getRandomly()));
+        }
+        return new SQLQueryAdapter(sb.toString());
     }
 
     private enum ConfigurationOption {
@@ -125,26 +145,6 @@ public final class YugabyteSetGenerator {
             this.optionName = optionName;
             this.op = op;
         }
-    }
-
-    public static SQLQueryAdapter create(YugabyteGlobalState globalState) {
-        StringBuilder sb = new StringBuilder();
-        ArrayList<ConfigurationOption> options = new ArrayList<>(Arrays.asList(ConfigurationOption.values()));
-        options.remove(ConfigurationOption.DEFAULT_WITH_OIDS);
-        ConfigurationOption option = Randomly.fromList(options);
-        sb.append("SET ");
-        if (Randomly.getBoolean()) {
-            sb.append(Randomly.fromOptions("SESSION", "LOCAL"));
-            sb.append(" ");
-        }
-        sb.append(option.optionName);
-        sb.append("=");
-        if (Randomly.getBoolean()) {
-            sb.append("DEFAULT");
-        } else {
-            sb.append(option.op.apply(globalState.getRandomly()));
-        }
-        return new SQLQueryAdapter(sb.toString());
     }
 
 }

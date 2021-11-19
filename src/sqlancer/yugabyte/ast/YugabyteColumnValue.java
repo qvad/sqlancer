@@ -13,6 +13,10 @@ public class YugabyteColumnValue implements YugabyteExpression {
         this.expectedValue = expectedValue;
     }
 
+    public static YugabyteColumnValue create(YugabyteColumn c, YugabyteConstant expected) {
+        return new YugabyteColumnValue(c, expected);
+    }
+
     @Override
     public YugabyteDataType getExpressionType() {
         return c.getType();
@@ -21,10 +25,6 @@ public class YugabyteColumnValue implements YugabyteExpression {
     @Override
     public YugabyteConstant getExpectedValue() {
         return expectedValue;
-    }
-
-    public static YugabyteColumnValue create(YugabyteColumn c, YugabyteConstant expected) {
-        return new YugabyteColumnValue(c, expected);
     }
 
     public YugabyteColumn getColumn() {

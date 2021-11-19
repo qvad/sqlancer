@@ -9,6 +9,25 @@ import sqlancer.yugabyte.ast.YugabyteBinaryLogicalOperation.BinaryLogicalOperato
 public class YugabyteBinaryLogicalOperation extends BinaryOperatorNode<YugabyteExpression, BinaryLogicalOperator>
         implements YugabyteExpression {
 
+    public YugabyteBinaryLogicalOperation(YugabyteExpression left, YugabyteExpression right, BinaryLogicalOperator op) {
+        super(left, right, op);
+    }
+
+    @Override
+    public YugabyteDataType getExpressionType() {
+        return YugabyteDataType.BOOLEAN;
+    }
+
+    @Override
+    public YugabyteConstant getExpectedValue() {
+        YugabyteConstant leftExpectedValue = getLeft().getExpectedValue();
+        YugabyteConstant rightExpectedValue = getRight().getExpectedValue();
+        if (leftExpectedValue == null || rightExpectedValue == null) {
+            return null;
+        }
+        return getOp().apply(leftExpectedValue, rightExpectedValue);
+    }
+
     public enum BinaryLogicalOperator implements Operator {
         AND {
             @Override
@@ -54,35 +73,16 @@ public class YugabyteBinaryLogicalOperation extends BinaryOperatorNode<YugabyteE
             }
         };
 
-        public abstract YugabyteConstant apply(YugabyteConstant left, YugabyteConstant right);
-
         public static BinaryLogicalOperator getRandom() {
             return Randomly.fromOptions(values());
         }
+
+        public abstract YugabyteConstant apply(YugabyteConstant left, YugabyteConstant right);
 
         @Override
         public String getTextRepresentation() {
             return toString();
         }
-    }
-
-    public YugabyteBinaryLogicalOperation(YugabyteExpression left, YugabyteExpression right, BinaryLogicalOperator op) {
-        super(left, right, op);
-    }
-
-    @Override
-    public YugabyteDataType getExpressionType() {
-        return YugabyteDataType.BOOLEAN;
-    }
-
-    @Override
-    public YugabyteConstant getExpectedValue() {
-        YugabyteConstant leftExpectedValue = getLeft().getExpectedValue();
-        YugabyteConstant rightExpectedValue = getRight().getExpectedValue();
-        if (leftExpectedValue == null || rightExpectedValue == null) {
-            return null;
-        }
-        return getOp().apply(leftExpectedValue, rightExpectedValue);
     }
 
 }

@@ -1,14 +1,14 @@
 package sqlancer.yugabyte.oracle.tlp;
 
-import sqlancer.ComparatorHelper;
-import sqlancer.Randomly;
-import sqlancer.yugabyte.YugabyteGlobalState;
-import sqlancer.yugabyte.YugabyteVisitor;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import sqlancer.ComparatorHelper;
+import sqlancer.Randomly;
+import sqlancer.yugabyte.YugabyteGlobalState;
+import sqlancer.yugabyte.YugabyteVisitor;
 
 public class YugabyteTLPWhereOracle extends YugabyteTLPBase {
 

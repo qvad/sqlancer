@@ -1,15 +1,121 @@
 package sqlancer.yugabyte.ast;
 
+import java.math.BigDecimal;
+
 import sqlancer.IgnoreMeException;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 
-import java.math.BigDecimal;
-
 public abstract class YugabyteConstant implements YugabyteExpression {
+
+    public static YugabyteConstant createNullConstant() {
+        return new YugabyteNullConstant();
+    }
+
+    public static YugabyteConstant createIntConstant(long val) {
+        return new IntConstant(val);
+    }
+
+    public static YugabyteConstant createBooleanConstant(boolean val) {
+        return new BooleanConstant(val);
+    }
+
+    public static YugabyteConstant createFalse() {
+        return createBooleanConstant(false);
+    }
+
+    public static YugabyteConstant createTrue() {
+        return createBooleanConstant(true);
+    }
+
+    public static YugabyteConstant createTextConstant(String string) {
+        return new StringConstant(string);
+    }
+
+    public static YugabyteConstant createByteConstant(String string) {
+        return new ByteConstant(string);
+    }
+
+    public static YugabyteConstant createDecimalConstant(BigDecimal bigDecimal) {
+        return new DecimalConstant(bigDecimal);
+    }
+
+    public static YugabyteConstant createFloatConstant(float val) {
+        return new FloatConstant(val);
+    }
+
+    public static YugabyteConstant createDoubleConstant(double val) {
+        return new DoubleConstant(val);
+    }
+
+    public static YugabyteConstant createRange(long left, boolean leftIsInclusive, long right,
+            boolean rightIsInclusive) {
+        long realLeft;
+        long realRight;
+        if (left > right) {
+            realRight = left;
+            realLeft = right;
+        } else {
+            realLeft = left;
+            realRight = right;
+        }
+        return new RangeConstant(realLeft, leftIsInclusive, realRight, rightIsInclusive);
+    }
+
+    public static YugabyteExpression createBitConstant(long integer) {
+        return new BitConstant(integer);
+    }
+
+    public static YugabyteExpression createInetConstant(String val) {
+        return new InetConstant(val);
+    }
 
     public abstract String getTextRepresentation();
 
     public abstract String getUnquotedTextRepresentation();
+
+    public String asString() {
+        throw new UnsupportedOperationException(this.toString());
+    }
+
+    public boolean isString() {
+        return false;
+    }
+
+    @Override
+    public YugabyteConstant getExpectedValue() {
+        return this;
+    }
+
+    public boolean isNull() {
+        return false;
+    }
+
+    public boolean asBoolean() {
+        throw new UnsupportedOperationException(this.toString());
+    }
+
+    public long asInt() {
+        throw new UnsupportedOperationException(this.toString());
+    }
+
+    public boolean isBoolean() {
+        return false;
+    }
+
+    public abstract YugabyteConstant isEquals(YugabyteConstant rightVal);
+
+    public boolean isInt() {
+        return false;
+    }
+
+    protected abstract YugabyteConstant isLessThan(YugabyteConstant rightVal);
+
+    @Override
+    public String toString() {
+        return getTextRepresentation();
+    }
+
+    public abstract YugabyteConstant cast(YugabyteDataType type);
 
     public static class BooleanConstant extends YugabyteConstant {
 
@@ -25,8 +131,8 @@ public abstract class YugabyteConstant implements YugabyteExpression {
         }
 
         @Override
-        public YugabyteDataType getExpressionType() {
-            return YugabyteDataType.BOOLEAN;
+        public String getUnquotedTextRepresentation() {
+            return getTextRepresentation();
         }
 
         @Override
@@ -80,8 +186,8 @@ public abstract class YugabyteConstant implements YugabyteExpression {
         }
 
         @Override
-        public String getUnquotedTextRepresentation() {
-            return getTextRepresentation();
+        public YugabyteDataType getExpressionType() {
+            return YugabyteDataType.BOOLEAN;
         }
 
     }
@@ -94,8 +200,8 @@ public abstract class YugabyteConstant implements YugabyteExpression {
         }
 
         @Override
-        public YugabyteDataType getExpressionType() {
-            return null;
+        public String getUnquotedTextRepresentation() {
+            return getTextRepresentation();
         }
 
         @Override
@@ -119,8 +225,8 @@ public abstract class YugabyteConstant implements YugabyteExpression {
         }
 
         @Override
-        public String getUnquotedTextRepresentation() {
-            return getTextRepresentation();
+        public YugabyteDataType getExpressionType() {
+            return null;
         }
 
     }
@@ -136,6 +242,21 @@ public abstract class YugabyteConstant implements YugabyteExpression {
         @Override
         public String getTextRepresentation() {
             return String.format("'%s'", value.replace("'", "''"));
+        }
+
+        @Override
+        public String getUnquotedTextRepresentation() {
+            return value;
+        }
+
+        @Override
+        public String asString() {
+            return value;
+        }
+
+        @Override
+        public boolean isString() {
+            return true;
         }
 
         @Override
@@ -221,21 +342,6 @@ public abstract class YugabyteConstant implements YugabyteExpression {
             return YugabyteDataType.TEXT;
         }
 
-        @Override
-        public boolean isString() {
-            return true;
-        }
-
-        @Override
-        public String asString() {
-            return value;
-        }
-
-        @Override
-        public String getUnquotedTextRepresentation() {
-            return value;
-        }
-
     }
 
     public static class IntConstant extends YugabyteConstant {
@@ -252,18 +358,13 @@ public abstract class YugabyteConstant implements YugabyteExpression {
         }
 
         @Override
-        public YugabyteDataType getExpressionType() {
-            return YugabyteDataType.INT;
+        public String getUnquotedTextRepresentation() {
+            return getTextRepresentation();
         }
 
         @Override
         public long asInt() {
             return val;
-        }
-
-        @Override
-        public boolean isInt() {
-            return true;
         }
 
         @Override
@@ -279,6 +380,11 @@ public abstract class YugabyteConstant implements YugabyteExpression {
             } else {
                 throw new AssertionError(rightVal);
             }
+        }
+
+        @Override
+        public boolean isInt() {
+            return true;
         }
 
         @Override
@@ -312,8 +418,8 @@ public abstract class YugabyteConstant implements YugabyteExpression {
         }
 
         @Override
-        public String getUnquotedTextRepresentation() {
-            return getTextRepresentation();
+        public YugabyteDataType getExpressionType() {
+            return YugabyteDataType.INT;
         }
 
     }
@@ -328,78 +434,6 @@ public abstract class YugabyteConstant implements YugabyteExpression {
         public String getTextRepresentation() {
             return String.format("'%s'::bytea", value.replace("'", "''"));
         }
-    }
-
-    public static YugabyteConstant createNullConstant() {
-        return new YugabyteNullConstant();
-    }
-
-    public String asString() {
-        throw new UnsupportedOperationException(this.toString());
-    }
-
-    public boolean isString() {
-        return false;
-    }
-
-    public static YugabyteConstant createIntConstant(long val) {
-        return new IntConstant(val);
-    }
-
-    public static YugabyteConstant createBooleanConstant(boolean val) {
-        return new BooleanConstant(val);
-    }
-
-    @Override
-    public YugabyteConstant getExpectedValue() {
-        return this;
-    }
-
-    public boolean isNull() {
-        return false;
-    }
-
-    public boolean asBoolean() {
-        throw new UnsupportedOperationException(this.toString());
-    }
-
-    public static YugabyteConstant createFalse() {
-        return createBooleanConstant(false);
-    }
-
-    public static YugabyteConstant createTrue() {
-        return createBooleanConstant(true);
-    }
-
-    public long asInt() {
-        throw new UnsupportedOperationException(this.toString());
-    }
-
-    public boolean isBoolean() {
-        return false;
-    }
-
-    public abstract YugabyteConstant isEquals(YugabyteConstant rightVal);
-
-    public boolean isInt() {
-        return false;
-    }
-
-    protected abstract YugabyteConstant isLessThan(YugabyteConstant rightVal);
-
-    @Override
-    public String toString() {
-        return getTextRepresentation();
-    }
-
-    public abstract YugabyteConstant cast(YugabyteDataType type);
-
-    public static YugabyteConstant createTextConstant(String string) {
-        return new StringConstant(string);
-    }
-
-    public static YugabyteConstant createByteConstant(String string) {
-        return new ByteConstant(string);
     }
 
     public abstract static class YugabyteConstantBase extends YugabyteConstant {
@@ -455,7 +489,7 @@ public abstract class YugabyteConstant implements YugabyteExpression {
 
         @Override
         public String getTextRepresentation() {
-            return String.valueOf(val);
+            return val;
         }
 
         @Override
@@ -574,40 +608,6 @@ public abstract class YugabyteConstant implements YugabyteExpression {
             return YugabyteDataType.RANGE;
         }
 
-    }
-
-    public static YugabyteConstant createDecimalConstant(BigDecimal bigDecimal) {
-        return new DecimalConstant(bigDecimal);
-    }
-
-    public static YugabyteConstant createFloatConstant(float val) {
-        return new FloatConstant(val);
-    }
-
-    public static YugabyteConstant createDoubleConstant(double val) {
-        return new DoubleConstant(val);
-    }
-
-    public static YugabyteConstant createRange(long left, boolean leftIsInclusive, long right,
-                                               boolean rightIsInclusive) {
-        long realLeft;
-        long realRight;
-        if (left > right) {
-            realRight = left;
-            realLeft = right;
-        } else {
-            realLeft = left;
-            realRight = right;
-        }
-        return new RangeConstant(realLeft, leftIsInclusive, realRight, rightIsInclusive);
-    }
-
-    public static YugabyteExpression createBitConstant(long integer) {
-        return new BitConstant(integer);
-    }
-
-    public static YugabyteExpression createInetConstant(String val) {
-        return new InetConstant(val);
     }
 
 }

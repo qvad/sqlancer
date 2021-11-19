@@ -1,50 +1,66 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import sqlancer.IgnoreMeException;
 import sqlancer.Randomly;
 import sqlancer.common.gen.ExpressionGenerator;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteRowValue;
-import sqlancer.yugabyte.ast.YugabyteAggregate.YugabyteAggregateFunction;
-import sqlancer.yugabyte.ast.YugabyteBinaryArithmeticOperation.YugabyteBinaryOperator;
-import sqlancer.yugabyte.ast.YugabyteBinaryBitOperation.YugabyteBinaryBitOperator;
-import sqlancer.yugabyte.ast.YugabyteBinaryLogicalOperation.BinaryLogicalOperator;
-import sqlancer.yugabyte.ast.YugabyteBinaryRangeOperation.YugabyteBinaryRangeComparisonOperator;
-import sqlancer.yugabyte.ast.YugabyteBinaryRangeOperation.YugabyteBinaryRangeOperator;
-import sqlancer.yugabyte.ast.YugabyteFunction.YugabyteFunctionWithResult;
-import sqlancer.yugabyte.ast.YugabyteOrderByTerm.YugabyteOrder;
-import sqlancer.yugabyte.ast.YugabytePOSIXRegularExpression.POSIXRegex;
-import sqlancer.yugabyte.ast.YugabytePostfixOperation.PostfixOperator;
-import sqlancer.yugabyte.ast.YugabytePrefixOperation.PrefixOperator;
 import sqlancer.yugabyte.YugabyteCompoundDataType;
 import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteProvider;
-import sqlancer.yugabyte.ast.*;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteRowValue;
+import sqlancer.yugabyte.ast.YugabyteAggregate;
+import sqlancer.yugabyte.ast.YugabyteAggregate.YugabyteAggregateFunction;
+import sqlancer.yugabyte.ast.YugabyteBetweenOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryArithmeticOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryArithmeticOperation.YugabyteBinaryOperator;
+import sqlancer.yugabyte.ast.YugabyteBinaryBitOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryBitOperation.YugabyteBinaryBitOperator;
+import sqlancer.yugabyte.ast.YugabyteBinaryComparisonOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryLogicalOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryLogicalOperation.BinaryLogicalOperator;
+import sqlancer.yugabyte.ast.YugabyteBinaryRangeOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryRangeOperation.YugabyteBinaryRangeComparisonOperator;
+import sqlancer.yugabyte.ast.YugabyteBinaryRangeOperation.YugabyteBinaryRangeOperator;
+import sqlancer.yugabyte.ast.YugabyteCastOperation;
+import sqlancer.yugabyte.ast.YugabyteColumnValue;
+import sqlancer.yugabyte.ast.YugabyteConcatOperation;
+import sqlancer.yugabyte.ast.YugabyteConstant;
+import sqlancer.yugabyte.ast.YugabyteExpression;
+import sqlancer.yugabyte.ast.YugabyteFunction;
+import sqlancer.yugabyte.ast.YugabyteFunction.YugabyteFunctionWithResult;
+import sqlancer.yugabyte.ast.YugabyteFunctionWithUnknownResult;
+import sqlancer.yugabyte.ast.YugabyteInOperation;
+import sqlancer.yugabyte.ast.YugabyteOrderByTerm;
+import sqlancer.yugabyte.ast.YugabyteOrderByTerm.YugabyteOrder;
+import sqlancer.yugabyte.ast.YugabytePOSIXRegularExpression;
+import sqlancer.yugabyte.ast.YugabytePOSIXRegularExpression.POSIXRegex;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation.PostfixOperator;
+import sqlancer.yugabyte.ast.YugabytePrefixOperation;
+import sqlancer.yugabyte.ast.YugabytePrefixOperation.PrefixOperator;
+import sqlancer.yugabyte.ast.YugabyteSimilarTo;
 
 public class YugabyteExpressionGenerator implements ExpressionGenerator<YugabyteExpression> {
 
     private final int maxDepth;
 
     private final Randomly r;
-
-    private List<YugabyteColumn> columns;
-
-    private YugabyteRowValue rw;
-
-    private boolean expectedResult;
-
-    private YugabyteGlobalState globalState;
-
-    private boolean allowAggregateFunctions;
-
     private final Map<String, Character> functionsAndTypes;
-
     private final List<Character> allowedFunctionTypes;
+    private List<YugabyteColumn> columns;
+    private YugabyteRowValue rw;
+    private boolean expectedResult;
+    private YugabyteGlobalState globalState;
+    private boolean allowAggregateFunctions;
 
     public YugabyteExpressionGenerator(YugabyteGlobalState globalState) {
         this.r = globalState.getRandomly();
@@ -52,6 +68,105 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
         this.globalState = globalState;
         this.functionsAndTypes = globalState.getFunctionsAndTypes();
         this.allowedFunctionTypes = globalState.getAllowedFunctionTypes();
+    }
+
+    public static YugabyteExpression generateExpression(YugabyteGlobalState globalState, YugabyteDataType type) {
+        return new YugabyteExpressionGenerator(globalState).generateExpression(0, type);
+    }
+
+    private static YugabyteCompoundDataType getCompoundDataType(YugabyteDataType type) {
+        switch (type) {
+        case BOOLEAN:
+        case DECIMAL: // TODO
+        case FLOAT:
+        case INT:
+        case MONEY:
+        case RANGE:
+        case REAL:
+        case INET:
+        case BYTEA:
+            return YugabyteCompoundDataType.create(type);
+        case TEXT: // TODO
+        case BIT:
+            if (Randomly.getBoolean() || YugabyteProvider.generateOnlyKnown /*
+                                                                             * The PQS implementation does not check for
+                                                                             * size specifications
+                                                                             */) {
+                return YugabyteCompoundDataType.create(type);
+            } else {
+                return YugabyteCompoundDataType.create(type, (int) Randomly.getNotCachedInteger(1, 1000));
+            }
+        default:
+            throw new AssertionError(type);
+        }
+
+    }
+
+    public static YugabyteExpression generateConstant(Randomly r, YugabyteDataType type) {
+        if (Randomly.getBooleanWithSmallProbability()) {
+            return YugabyteConstant.createNullConstant();
+        }
+        // if (Randomly.getBooleanWithSmallProbability()) {
+        // return YugabyteConstant.createTextConstant(r.getString());
+        // }
+        switch (type) {
+        case INT:
+            if (Randomly.getBooleanWithSmallProbability()) {
+                return YugabyteConstant.createTextConstant(String.valueOf(r.getInteger()));
+            } else {
+                return YugabyteConstant.createIntConstant(r.getInteger());
+            }
+        case BOOLEAN:
+            if (Randomly.getBooleanWithSmallProbability() && !YugabyteProvider.generateOnlyKnown) {
+                return YugabyteConstant
+                        .createTextConstant(Randomly.fromOptions("TR", "TRUE", "FA", "FALSE", "0", "1", "ON", "off"));
+            } else {
+                return YugabyteConstant.createBooleanConstant(Randomly.getBoolean());
+            }
+        case TEXT:
+            return YugabyteConstant.createTextConstant(r.getString());
+        case DECIMAL:
+            return YugabyteConstant.createDecimalConstant(r.getRandomBigDecimal());
+        case FLOAT:
+            return YugabyteConstant.createFloatConstant((float) r.getDouble());
+        case REAL:
+            return YugabyteConstant.createDoubleConstant(r.getDouble());
+        case RANGE:
+            return YugabyteConstant.createRange(r.getInteger(), Randomly.getBoolean(), r.getInteger(),
+                    Randomly.getBoolean());
+        case MONEY:
+            return new YugabyteCastOperation(generateConstant(r, YugabyteDataType.FLOAT),
+                    getCompoundDataType(YugabyteDataType.MONEY));
+        case INET:
+            return YugabyteConstant.createInetConstant(getRandomInet(r));
+        case BIT:
+            return YugabyteConstant.createBitConstant(r.getInteger());
+        case BYTEA:
+            return YugabyteConstant.createByteConstant(String.valueOf(r.getInteger()));
+        default:
+            throw new AssertionError(type);
+        }
+    }
+
+    private static String getRandomInet(Randomly r) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            if (i != 0) {
+                sb.append('.');
+            }
+            sb.append(r.getInteger() & 255);
+        }
+        return sb.toString();
+    }
+
+    public static YugabyteExpression generateExpression(YugabyteGlobalState globalState, List<YugabyteColumn> columns,
+            YugabyteDataType type) {
+        return new YugabyteExpressionGenerator(globalState).setColumns(columns).generateExpression(0, type);
+    }
+
+    public static YugabyteExpression generateExpression(YugabyteGlobalState globalState, List<YugabyteColumn> columns) {
+        return new YugabyteExpressionGenerator(globalState).setColumns(columns).generateExpression(0);
+
     }
 
     public YugabyteExpressionGenerator setColumns(List<YugabyteColumn> columns) {
@@ -75,11 +190,6 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
                     YugabyteOrder.getRandomOrder()));
         }
         return orderBys;
-    }
-
-    private enum BooleanExpression {
-        POSTFIX_OPERATOR, NOT, BINARY_LOGICAL_OPERATOR, BINARY_COMPARISON, FUNCTION, CAST, BETWEEN, IN_OPERATION,
-        SIMILAR_TO, POSIX_REGEX, BINARY_RANGE_COMPARISON;
     }
 
     private YugabyteExpression generateFunctionWithUnknownResult(int depth, YugabyteDataType type) {
@@ -202,9 +312,8 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
     }
 
     private YugabyteExpression getComparison(YugabyteExpression leftExpr, YugabyteExpression rightExpr) {
-        YugabyteBinaryComparisonOperation op = new YugabyteBinaryComparisonOperation(leftExpr, rightExpr,
+        return new YugabyteBinaryComparisonOperation(leftExpr, rightExpr,
                 YugabyteBinaryComparisonOperation.YugabyteBinaryComparisonOperator.getRandom());
-        return op;
     }
 
     private YugabyteExpression inOperation(int depth) {
@@ -215,10 +324,6 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
             rightExpr.add(generateExpression(depth + 1, type));
         }
         return new YugabyteInOperation(leftExpr, rightExpr, Randomly.getBoolean());
-    }
-
-    public static YugabyteExpression generateExpression(YugabyteGlobalState globalState, YugabyteDataType type) {
-        return new YugabyteExpressionGenerator(globalState).generateExpression(0, type);
     }
 
     public YugabyteExpression generateExpression(int depth, YugabyteDataType originalType) {
@@ -271,7 +376,7 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
             case INET:
                 return generateConstant(r, dataType);
             case BYTEA:
-                return generateByteExpression(depth);
+                return generateByteExpression();
             case BIT:
                 return generateBitExpression(depth);
             case RANGE:
@@ -280,38 +385,6 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
                 throw new AssertionError(dataType);
             }
         }
-    }
-
-    private static YugabyteCompoundDataType getCompoundDataType(YugabyteDataType type) {
-        switch (type) {
-        case BOOLEAN:
-        case DECIMAL: // TODO
-        case FLOAT:
-        case INT:
-        case MONEY:
-        case RANGE:
-        case REAL:
-        case INET:
-        case BYTEA:
-            return YugabyteCompoundDataType.create(type);
-        case TEXT: // TODO
-        case BIT:
-            if (Randomly.getBoolean() || YugabyteProvider.generateOnlyKnown /*
-                                                                             * The PQS implementation does not check for
-                                                                             * size specifications
-                                                                             */) {
-                return YugabyteCompoundDataType.create(type);
-            } else {
-                return YugabyteCompoundDataType.create(type, (int) Randomly.getNotCachedInteger(1, 1000));
-            }
-        default:
-            throw new AssertionError(type);
-        }
-
-    }
-
-    private enum RangeExpression {
-        BINARY_OP;
     }
 
     private YugabyteExpression generateRangeExpression(int depth) {
@@ -326,10 +399,6 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
         default:
             throw new AssertionError(option);
         }
-    }
-
-    private enum TextExpression {
-        CAST, FUNCTION, CONCAT
     }
 
     private YugabyteExpression generateTextExpression(int depth) {
@@ -355,11 +424,7 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
         return new YugabyteConcatOperation(left, right);
     }
 
-    private enum BitExpression {
-        BINARY_OPERATION
-    };
-
-    private YugabyteExpression generateByteExpression(int depth) {
+    private YugabyteExpression generateByteExpression() {
         return YugabyteConstant.createByteConstant("Th\\000omas");
     }
 
@@ -374,10 +439,6 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
         default:
             throw new AssertionError();
         }
-    }
-
-    private enum IntExpression {
-        UNARY_OPERATION, FUNCTION, CAST, BINARY_ARITHMETIC_EXPRESSION
     }
 
     private YugabyteExpression generateIntExpression(int depth) {
@@ -424,73 +485,6 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
             expr = gen.generateExpression(type);
         } while (expr.getExpectedValue() == null);
         return expr;
-    }
-
-    public static YugabyteExpression generateConstant(Randomly r, YugabyteDataType type) {
-        if (Randomly.getBooleanWithSmallProbability()) {
-            return YugabyteConstant.createNullConstant();
-        }
-        // if (Randomly.getBooleanWithSmallProbability()) {
-        // return YugabyteConstant.createTextConstant(r.getString());
-        // }
-        switch (type) {
-        case INT:
-            if (Randomly.getBooleanWithSmallProbability()) {
-                return YugabyteConstant.createTextConstant(String.valueOf(r.getInteger()));
-            } else {
-                return YugabyteConstant.createIntConstant(r.getInteger());
-            }
-        case BOOLEAN:
-            if (Randomly.getBooleanWithSmallProbability() && !YugabyteProvider.generateOnlyKnown) {
-                return YugabyteConstant
-                        .createTextConstant(Randomly.fromOptions("TR", "TRUE", "FA", "FALSE", "0", "1", "ON", "off"));
-            } else {
-                return YugabyteConstant.createBooleanConstant(Randomly.getBoolean());
-            }
-        case TEXT:
-            return YugabyteConstant.createTextConstant(r.getString());
-        case DECIMAL:
-            return YugabyteConstant.createDecimalConstant(r.getRandomBigDecimal());
-        case FLOAT:
-            return YugabyteConstant.createFloatConstant((float) r.getDouble());
-        case REAL:
-            return YugabyteConstant.createDoubleConstant(r.getDouble());
-        case RANGE:
-            return YugabyteConstant.createRange(r.getInteger(), Randomly.getBoolean(), r.getInteger(),
-                    Randomly.getBoolean());
-        case MONEY:
-            return new YugabyteCastOperation(generateConstant(r, YugabyteDataType.FLOAT),
-                    getCompoundDataType(YugabyteDataType.MONEY));
-        case INET:
-            return YugabyteConstant.createInetConstant(getRandomInet(r));
-        case BIT:
-            return YugabyteConstant.createBitConstant(r.getInteger());
-        case BYTEA:
-            return YugabyteConstant.createByteConstant(String.valueOf(r.getInteger()));
-        default:
-            throw new AssertionError(type);
-        }
-    }
-
-    private static String getRandomInet(Randomly r) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 4; i++) {
-            if (i != 0) {
-                sb.append('.');
-            }
-            sb.append(r.getInteger() & 255);
-        }
-        return sb.toString();
-    }
-
-    public static YugabyteExpression generateExpression(YugabyteGlobalState globalState, List<YugabyteColumn> columns,
-                                                        YugabyteDataType type) {
-        return new YugabyteExpressionGenerator(globalState).setColumns(columns).generateExpression(0, type);
-    }
-
-    public static YugabyteExpression generateExpression(YugabyteGlobalState globalState, List<YugabyteColumn> columns) {
-        return new YugabyteExpressionGenerator(globalState).setColumns(columns).generateExpression(0);
-
     }
 
     public List<YugabyteExpression> generateExpressions(int nr) {
@@ -554,6 +548,27 @@ public class YugabyteExpressionGenerator implements ExpressionGenerator<Yugabyte
     @Override
     public YugabyteExpression isNull(YugabyteExpression expr) {
         return new YugabytePostfixOperation(expr, PostfixOperator.IS_NULL);
+    }
+
+    private enum BooleanExpression {
+        POSTFIX_OPERATOR, NOT, BINARY_LOGICAL_OPERATOR, BINARY_COMPARISON, FUNCTION, CAST, BETWEEN, IN_OPERATION,
+        SIMILAR_TO, POSIX_REGEX, BINARY_RANGE_COMPARISON
+    }
+
+    private enum RangeExpression {
+        BINARY_OP
+    }
+
+    private enum TextExpression {
+        CAST, FUNCTION, CONCAT
+    }
+
+    private enum BitExpression {
+        BINARY_OPERATION
+    }
+
+    private enum IntExpression {
+        UNARY_OPERATION, FUNCTION, CAST, BINARY_ARITHMETIC_EXPRESSION
     }
 
 }

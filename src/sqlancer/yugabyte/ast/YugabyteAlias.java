@@ -23,13 +23,13 @@ public class YugabyteAlias implements UnaryOperation<YugabyteExpression>, Yugaby
     }
 
     @Override
-    public OperatorKind getOperatorKind() {
-        return OperatorKind.POSTFIX;
+    public boolean omitBracketsWhenPrinting() {
+        return true;
     }
 
     @Override
-    public boolean omitBracketsWhenPrinting() {
-        return true;
+    public OperatorKind getOperatorKind() {
+        return OperatorKind.POSTFIX;
     }
 
 }

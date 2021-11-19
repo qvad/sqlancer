@@ -17,7 +17,7 @@ public class YugabyteFunction implements YugabyteExpression {
     }
 
     public YugabyteFunction(YugabyteFunctionWithUnknownResult f, YugabyteDataType returnType,
-                            YugabyteExpression... args) {
+            YugabyteExpression... args) {
         this.func = f.getName();
         this.returnType = returnType;
         this.args = args.clone();
@@ -31,9 +31,28 @@ public class YugabyteFunction implements YugabyteExpression {
         return args.clone();
     }
 
+    @Override
+    public YugabyteDataType getExpressionType() {
+        return returnType;
+    }
+
+    @Override
+    public YugabyteConstant getExpectedValue() {
+        if (functionWithKnownResult == null) {
+            return null;
+        }
+        YugabyteConstant[] constants = new YugabyteConstant[args.length];
+        for (int i = 0; i < constants.length; i++) {
+            constants[i] = args[i].getExpectedValue();
+            if (constants[i] == null) {
+                return null;
+            }
+        }
+        return functionWithKnownResult.apply(constants, args);
+    }
+
     public enum YugabyteFunctionWithResult {
         ABS(1, "abs") {
-
             @Override
             public YugabyteConstant apply(YugabyteConstant[] evaluatedArgs, YugabyteExpression... args) {
                 if (evaluatedArgs[0].isNull()) {
@@ -56,7 +75,6 @@ public class YugabyteFunction implements YugabyteExpression {
 
         },
         LOWER(1, "lower") {
-
             @Override
             public YugabyteConstant apply(YugabyteConstant[] evaluatedArgs, YugabyteExpression... args) {
                 if (evaluatedArgs[0].isNull()) {
@@ -99,7 +117,6 @@ public class YugabyteFunction implements YugabyteExpression {
             }
         },
         UPPER(1, "upper") {
-
             @Override
             public YugabyteConstant apply(YugabyteConstant[] evaluatedArgs, YugabyteExpression... args) {
                 if (evaluatedArgs[0].isNull()) {
@@ -212,9 +229,15 @@ public class YugabyteFunction implements YugabyteExpression {
 
         };
 
-        private String functionName;
         final int nrArgs;
+        private final String functionName;
         private final boolean variadic;
+
+        YugabyteFunctionWithResult(int nrArgs, String functionName) {
+            this.nrArgs = nrArgs;
+            this.functionName = functionName;
+            this.variadic = false;
+        }
 
         public YugabyteDataType[] getRandomTypes(int nr) {
             YugabyteDataType[] types = new YugabyteDataType[nr];
@@ -222,12 +245,6 @@ public class YugabyteFunction implements YugabyteExpression {
                 types[i] = YugabyteDataType.getRandomType();
             }
             return types;
-        }
-
-        YugabyteFunctionWithResult(int nrArgs, String functionName) {
-            this.nrArgs = nrArgs;
-            this.functionName = functionName;
-            this.variadic = false;
         }
 
         /**
@@ -263,26 +280,6 @@ public class YugabyteFunction implements YugabyteExpression {
             return true;
         }
 
-    }
-
-    @Override
-    public YugabyteConstant getExpectedValue() {
-        if (functionWithKnownResult == null) {
-            return null;
-        }
-        YugabyteConstant[] constants = new YugabyteConstant[args.length];
-        for (int i = 0; i < constants.length; i++) {
-            constants[i] = args[i].getExpectedValue();
-            if (constants[i] == null) {
-                return null;
-            }
-        }
-        return functionWithKnownResult.apply(constants, args);
-    }
-
-    @Override
-    public YugabyteDataType getExpressionType() {
-        return returnType;
     }
 
 }

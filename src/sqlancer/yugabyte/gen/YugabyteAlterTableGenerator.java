@@ -1,60 +1,28 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.List;
+
 import sqlancer.IgnoreMeException;
 import sqlancer.Randomly;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 import sqlancer.yugabyte.YugabyteGlobalState;
-import sqlancer.yugabyte.YugabyteVisitor;
-
-import java.util.List;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 
 public class YugabyteAlterTableGenerator {
 
     private final YugabyteTable randomTable;
     private final Randomly r;
-    private static YugabyteColumn randomColumn;
-    private final boolean generateOnlyKnown;
-    private final List<String> opClasses;
     private final YugabyteGlobalState globalState;
 
-    protected enum Action {
-        // ALTER_TABLE_ADD_COLUMN, // [ COLUMN ] column data_type [ COLLATE collation ] [
-        // column_constraint [ ... ] ]
-        ALTER_TABLE_DROP_COLUMN, // DROP [ COLUMN ] [ IF EXISTS ] column [ RESTRICT | CASCADE ]
-        ADD_TABLE_CONSTRAINT, // ADD table_constraint [ NOT VALID ]
-        ADD_TABLE_CONSTRAINT_USING_INDEX, // ADD table_constraint_using_index
-        DISABLE_ROW_LEVEL_SECURITY, // DISABLE ROW LEVEL SECURITY
-        ENABLE_ROW_LEVEL_SECURITY, // ENABLE ROW LEVEL SECURITY
-        FORCE_ROW_LEVEL_SECURITY, // FORCE ROW LEVEL SECURITY
-        NO_FORCE_ROW_LEVEL_SECURITY, // NO FORCE ROW LEVEL SECURITY
-    }
-
-    public YugabyteAlterTableGenerator(YugabyteTable randomTable, YugabyteGlobalState globalState,
-            boolean generateOnlyKnown) {
+    public YugabyteAlterTableGenerator(YugabyteTable randomTable, YugabyteGlobalState globalState) {
         this.randomTable = randomTable;
         this.globalState = globalState;
         this.r = globalState.getRandomly();
-        this.generateOnlyKnown = generateOnlyKnown;
-        this.opClasses = globalState.getOpClasses();
     }
 
-    public static SQLQueryAdapter create(YugabyteTable randomTable, YugabyteGlobalState globalState,
-            boolean generateOnlyKnown) {
-        return new YugabyteAlterTableGenerator(randomTable, globalState, generateOnlyKnown).generate();
-    }
-
-    private enum Attribute {
-        N_DISTINCT_INHERITED("n_distinct_inherited"), N_DISTINCT("n_distinct");
-
-        private final String val;
-
-        Attribute(String val) {
-            this.val = val;
-        }
+    public static SQLQueryAdapter create(YugabyteTable randomTable, YugabyteGlobalState globalState) {
+        return new YugabyteAlterTableGenerator(randomTable, globalState).generate();
     }
 
     public List<Action> getActions(ExpectedErrors errors) {
@@ -195,11 +163,16 @@ public class YugabyteAlterTableGenerator {
         return new SQLQueryAdapter(sb.toString(), errors, true);
     }
 
-    private static void alterColumn(YugabyteTable randomTable, StringBuilder sb) {
-        sb.append("ALTER ");
-        randomColumn = randomTable.getRandomColumn();
-        sb.append(randomColumn.getName());
-        sb.append(" ");
+    protected enum Action {
+        // ALTER_TABLE_ADD_COLUMN, // [ COLUMN ] column data_type [ COLLATE collation ] [
+        // column_constraint [ ... ] ]
+        ALTER_TABLE_DROP_COLUMN, // DROP [ COLUMN ] [ IF EXISTS ] column [ RESTRICT | CASCADE ]
+        ADD_TABLE_CONSTRAINT, // ADD table_constraint [ NOT VALID ]
+        ADD_TABLE_CONSTRAINT_USING_INDEX, // ADD table_constraint_using_index
+        DISABLE_ROW_LEVEL_SECURITY, // DISABLE ROW LEVEL SECURITY
+        ENABLE_ROW_LEVEL_SECURITY, // ENABLE ROW LEVEL SECURITY
+        FORCE_ROW_LEVEL_SECURITY, // FORCE ROW LEVEL SECURITY
+        NO_FORCE_ROW_LEVEL_SECURITY, // NO FORCE ROW LEVEL SECURITY
     }
 
 }

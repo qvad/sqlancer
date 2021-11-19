@@ -1,26 +1,33 @@
 package sqlancer.yugabyte.oracle.tlp;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.postgresql.util.PSQLException;
+
 import sqlancer.ComparatorHelper;
 import sqlancer.IgnoreMeException;
 import sqlancer.Randomly;
 import sqlancer.common.oracle.TestOracle;
 import sqlancer.common.query.SQLQueryAdapter;
 import sqlancer.common.query.SQLancerResultSet;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-import sqlancer.yugabyte.ast.YugabyteAggregate.YugabyteAggregateFunction;
-import sqlancer.yugabyte.ast.YugabytePostfixOperation.PostfixOperator;
-import sqlancer.yugabyte.ast.YugabytePrefixOperation.PrefixOperator;
 import sqlancer.yugabyte.YugabyteGlobalState;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.YugabyteVisitor;
-import sqlancer.yugabyte.ast.*;
+import sqlancer.yugabyte.ast.YugabyteAggregate;
+import sqlancer.yugabyte.ast.YugabyteAggregate.YugabyteAggregateFunction;
+import sqlancer.yugabyte.ast.YugabyteAlias;
+import sqlancer.yugabyte.ast.YugabyteExpression;
+import sqlancer.yugabyte.ast.YugabyteJoin;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation.PostfixOperator;
+import sqlancer.yugabyte.ast.YugabytePrefixOperation;
+import sqlancer.yugabyte.ast.YugabytePrefixOperation.PrefixOperator;
+import sqlancer.yugabyte.ast.YugabyteSelect;
 import sqlancer.yugabyte.gen.YugabyteCommon;
-
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class YugabyteTLPAggregateOracle extends YugabyteTLPBase implements TestOracle {
 
@@ -78,7 +85,7 @@ public class YugabyteTLPAggregateOracle extends YugabyteTLPBase implements TestO
     }
 
     private String createMetamorphicUnionQuery(YugabyteSelect select, YugabyteAggregate aggregate,
-                                               List<YugabyteExpression> from) {
+            List<YugabyteExpression> from) {
         String metamorphicQuery;
         YugabyteExpression whereClause = gen.generateExpression(YugabyteDataType.BOOLEAN);
         YugabyteExpression negatedClause = new YugabytePrefixOperation(whereClause, PrefixOperator.NOT);
@@ -166,14 +173,14 @@ public class YugabyteTLPAggregateOracle extends YugabyteTLPBase implements TestO
         // case AVG:
         // return "SUM(agg0::DECIMAL)/SUM(agg1)::DECIMAL";
         case COUNT:
-            return YugabyteAggregateFunction.SUM.toString() + "(agg0)";
+            return YugabyteAggregateFunction.SUM + "(agg0)";
         default:
             return aggregate.getFunction().toString() + "(agg0)";
         }
     }
 
     private YugabyteSelect getSelect(List<YugabyteExpression> aggregates, List<YugabyteExpression> from,
-                                     YugabyteExpression whereClause, List<YugabyteJoin> joinList) {
+            YugabyteExpression whereClause, List<YugabyteJoin> joinList) {
         YugabyteSelect leftSelect = new YugabyteSelect();
         leftSelect.setFetchColumns(aggregates);
         leftSelect.setFromList(from);

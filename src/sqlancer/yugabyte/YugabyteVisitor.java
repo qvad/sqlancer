@@ -1,15 +1,50 @@
 package sqlancer.yugabyte;
 
-import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
-import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteFromTable;
-import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteSubquery;
-import sqlancer.yugabyte.ast.*;
-import sqlancer.yugabyte.gen.YugabyteExpressionGenerator;
-
 import java.util.List;
 
+import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
+import sqlancer.yugabyte.ast.YugabyteAggregate;
+import sqlancer.yugabyte.ast.YugabyteBetweenOperation;
+import sqlancer.yugabyte.ast.YugabyteBinaryLogicalOperation;
+import sqlancer.yugabyte.ast.YugabyteCastOperation;
+import sqlancer.yugabyte.ast.YugabyteColumnValue;
+import sqlancer.yugabyte.ast.YugabyteConstant;
+import sqlancer.yugabyte.ast.YugabyteExpression;
+import sqlancer.yugabyte.ast.YugabyteFunction;
+import sqlancer.yugabyte.ast.YugabyteInOperation;
+import sqlancer.yugabyte.ast.YugabyteOrderByTerm;
+import sqlancer.yugabyte.ast.YugabytePOSIXRegularExpression;
+import sqlancer.yugabyte.ast.YugabytePostfixOperation;
+import sqlancer.yugabyte.ast.YugabytePostfixText;
+import sqlancer.yugabyte.ast.YugabytePrefixOperation;
+import sqlancer.yugabyte.ast.YugabyteSelect;
+import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteFromTable;
+import sqlancer.yugabyte.ast.YugabyteSelect.YugabyteSubquery;
+import sqlancer.yugabyte.ast.YugabyteSimilarTo;
+import sqlancer.yugabyte.gen.YugabyteExpressionGenerator;
+
 public interface YugabyteVisitor {
+
+    static String asString(YugabyteExpression expr) {
+        YugabyteToStringVisitor visitor = new YugabyteToStringVisitor();
+        visitor.visit(expr);
+        return visitor.get();
+    }
+
+    static String asExpectedValues(YugabyteExpression expr) {
+        YugabyteExpectedValueVisitor v = new YugabyteExpectedValueVisitor();
+        v.visit(expr);
+        return v.get();
+    }
+
+    static String getExpressionAsString(YugabyteGlobalState globalState, YugabyteDataType type,
+            List<YugabyteColumn> columns) {
+        YugabyteExpression expression = YugabyteExpressionGenerator.generateExpression(globalState, columns, type);
+        YugabyteToStringVisitor visitor = new YugabyteToStringVisitor();
+        visitor.visit(expression);
+        return visitor.get();
+    }
 
     void visit(YugabyteConstant constant);
 
@@ -81,26 +116,6 @@ public interface YugabyteVisitor {
         } else {
             throw new AssertionError(expression);
         }
-    }
-
-    static String asString(YugabyteExpression expr) {
-        YugabyteToStringVisitor visitor = new YugabyteToStringVisitor();
-        visitor.visit(expr);
-        return visitor.get();
-    }
-
-    static String asExpectedValues(YugabyteExpression expr) {
-        YugabyteExpectedValueVisitor v = new YugabyteExpectedValueVisitor();
-        v.visit(expr);
-        return v.get();
-    }
-
-    static String getExpressionAsString(YugabyteGlobalState globalState, YugabyteDataType type,
-                                        List<YugabyteColumn> columns) {
-        YugabyteExpression expression = YugabyteExpressionGenerator.generateExpression(globalState, columns, type);
-        YugabyteToStringVisitor visitor = new YugabyteToStringVisitor();
-        visitor.visit(expression);
-        return visitor.get();
     }
 
 }

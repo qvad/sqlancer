@@ -1,13 +1,13 @@
 package sqlancer.yugabyte.gen;
 
+import java.util.List;
+
 import sqlancer.Randomly;
 import sqlancer.common.DBMSCommon;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.yugabyte.YugabyteSchema.YugabyteIndex;
 import sqlancer.yugabyte.YugabyteGlobalState;
-
-import java.util.List;
+import sqlancer.yugabyte.YugabyteSchema.YugabyteIndex;
 
 public final class YugabyteDropIndexGenerator {
 

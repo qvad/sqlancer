@@ -1,15 +1,35 @@
 package sqlancer.yugabyte.ast;
 
+import java.util.function.BinaryOperator;
+
 import sqlancer.Randomly;
 import sqlancer.common.ast.BinaryOperatorNode;
 import sqlancer.common.ast.BinaryOperatorNode.Operator;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.ast.YugabyteBinaryArithmeticOperation.YugabyteBinaryOperator;
 
-import java.util.function.BinaryOperator;
-
 public class YugabyteBinaryArithmeticOperation extends BinaryOperatorNode<YugabyteExpression, YugabyteBinaryOperator>
         implements YugabyteExpression {
+
+    public YugabyteBinaryArithmeticOperation(YugabyteExpression left, YugabyteExpression right,
+            YugabyteBinaryOperator op) {
+        super(left, right, op);
+    }
+
+    @Override
+    public YugabyteDataType getExpressionType() {
+        return YugabyteDataType.INT;
+    }
+
+    @Override
+    public YugabyteConstant getExpectedValue() {
+        YugabyteConstant leftExpected = getLeft().getExpectedValue();
+        YugabyteConstant rightExpected = getRight().getExpectedValue();
+        if (leftExpected == null || rightExpected == null) {
+            return null;
+        }
+        return getOp().apply(leftExpected, rightExpected);
+    }
 
     public enum YugabyteBinaryOperator implements Operator {
 
@@ -33,7 +53,6 @@ public class YugabyteBinaryArithmeticOperation extends BinaryOperatorNode<Yugaby
             }
         },
         DIVISION("/") {
-
             @Override
             public YugabyteConstant apply(YugabyteConstant left, YugabyteConstant right) {
                 return applyBitOperation(left, right, (l, r) -> r == 0 ? -1 : l / r);
@@ -55,10 +74,14 @@ public class YugabyteBinaryArithmeticOperation extends BinaryOperatorNode<Yugaby
             }
         };
 
-        private String textRepresentation;
+        private final String textRepresentation;
+
+        YugabyteBinaryOperator(String textRepresentation) {
+            this.textRepresentation = textRepresentation;
+        }
 
         private static YugabyteConstant applyBitOperation(YugabyteConstant left, YugabyteConstant right,
-                                                          BinaryOperator<Long> op) {
+                BinaryOperator<Long> op) {
             if (left.isNull() || right.isNull()) {
                 return YugabyteConstant.createNullConstant();
             } else {
@@ -69,8 +92,8 @@ public class YugabyteBinaryArithmeticOperation extends BinaryOperatorNode<Yugaby
             }
         }
 
-        YugabyteBinaryOperator(String textRepresentation) {
-            this.textRepresentation = textRepresentation;
+        public static YugabyteBinaryOperator getRandom() {
+            return Randomly.fromOptions(values());
         }
 
         @Override
@@ -80,30 +103,6 @@ public class YugabyteBinaryArithmeticOperation extends BinaryOperatorNode<Yugaby
 
         public abstract YugabyteConstant apply(YugabyteConstant left, YugabyteConstant right);
 
-        public static YugabyteBinaryOperator getRandom() {
-            return Randomly.fromOptions(values());
-        }
-
-    }
-
-    public YugabyteBinaryArithmeticOperation(YugabyteExpression left, YugabyteExpression right,
-                                             YugabyteBinaryOperator op) {
-        super(left, right, op);
-    }
-
-    @Override
-    public YugabyteConstant getExpectedValue() {
-        YugabyteConstant leftExpected = getLeft().getExpectedValue();
-        YugabyteConstant rightExpected = getRight().getExpectedValue();
-        if (leftExpected == null || rightExpected == null) {
-            return null;
-        }
-        return getOp().apply(leftExpected, rightExpected);
-    }
-
-    @Override
-    public YugabyteDataType getExpressionType() {
-        return YugabyteDataType.INT;
     }
 
 }
