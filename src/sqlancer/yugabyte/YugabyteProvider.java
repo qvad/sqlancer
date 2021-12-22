@@ -63,7 +63,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         super(globalClass, optionClass);
     }
 
-    protected static int mapActions(YugabyteGlobalState globalState, Action a) {
+    public static int mapActions(YugabyteGlobalState globalState, Action a) {
         Randomly r = globalState.getRandomly();
         int nrPerformed;
         switch (a) {

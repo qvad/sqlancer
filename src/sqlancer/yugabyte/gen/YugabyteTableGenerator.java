@@ -33,6 +33,7 @@ public class YugabyteTableGenerator {
         this.globalState = globalState;
         table = new YugabyteTable(tableName, columnsToBeAdded, null, null, null, false, false);
         errors.add("PRIMARY KEY containing column of type");
+        errors.add("already exists");
         errors.add("invalid input syntax for");
         errors.add("is not unique");
         errors.add("integer out of range");
