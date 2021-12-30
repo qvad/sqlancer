@@ -29,6 +29,7 @@ public class YugabyteAlterTableGenerator {
         YugabyteCommon.addCommonExpressionErrors(errors);
         YugabyteCommon.addCommonInsertUpdateErrors(errors);
         YugabyteCommon.addCommonTableErrors(errors);
+        errors.add("duplicate key value violates unique constraint");
         errors.add("cannot drop desired object(s) because other objects depend on them");
         errors.add("invalid input syntax for");
         errors.add("cannot remove a key column");

@@ -2,8 +2,6 @@ package sqlancer.yugabyte.oracle;
 
 import static sqlancer.yugabyte.YugabyteProvider.CREATION_LOCK;
 
-import java.sql.SQLException;
-
 import sqlancer.IgnoreMeException;
 import sqlancer.Main;
 import sqlancer.MainOptions;
@@ -13,7 +11,6 @@ import sqlancer.common.DBMSCommon;
 import sqlancer.common.oracle.TestOracle;
 import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
-import sqlancer.common.query.SQLancerResultSet;
 import sqlancer.yugabyte.YugabyteGlobalState;
 import sqlancer.yugabyte.YugabyteProvider;
 import sqlancer.yugabyte.gen.YugabyteCommon;
@@ -34,16 +31,6 @@ public class YugabyteCatalogOracle implements TestOracle {
         this.options = state.getOptions();
         YugabyteCommon.addCommonExpressionErrors(errors);
         YugabyteCommon.addCommonFetchErrors(errors);
-    }
-
-    protected void readFunctions(YugabyteGlobalState globalState) throws SQLException {
-        SQLQueryAdapter query = new SQLQueryAdapter("SELECT proname, provolatile FROM pg_proc;");
-        SQLancerResultSet rs = query.executeAndGet(globalState);
-        while (rs.next()) {
-            String functionName = rs.getString(1);
-            Character functionType = rs.getString(2).charAt(0);
-            globalState.addFunctionAndType(functionName, functionType);
-        }
     }
 
     protected void createTables(YugabyteGlobalState globalState, int numTables) throws Exception {
@@ -68,23 +55,25 @@ public class YugabyteCatalogOracle implements TestOracle {
         }
     }
 
-    protected void prepareTables(YugabyteGlobalState globalState) throws Exception {
-        for (int i = 0; i < 1000; i++) {
-            StatementExecutor<YugabyteGlobalState, YugabyteProvider.Action> se = new StatementExecutor<>(globalState,
-                    YugabyteProvider.Action.values(), YugabyteProvider::mapActions, (q) -> {
-                        if (globalState.getSchema().getDatabaseTables().isEmpty()) {
-                            throw new IgnoreMeException();
-                        }
-                    });
-            se.executeStatements();
-            globalState.executeStatement(new SQLQueryAdapter("COMMIT", true));
-        }
+    private void evaluateBunchOfActions() throws Exception {
+        StatementExecutor<YugabyteGlobalState, YugabyteProvider.Action> se = new StatementExecutor<>(state,
+                YugabyteProvider.Action.values(), YugabyteProvider::mapActions, (q) -> {
+            if (state.getSchema().getDatabaseTables().isEmpty()) {
+                throw new IgnoreMeException();
+            }
+        });
+        se.executeStatements(true);
+        state.executeStatement(new SQLQueryAdapter("COMMIT", true));
     }
 
     @Override
     public void check() throws Exception {
-        readFunctions(state);
-        createTables(state, 10);
-        prepareTables(state);
+        // create table or evaluate catalog test
+        if (state.getRandomly().getInteger(1, 100) > 90) {
+            createTables(state, 1);
+            state.getManager().incrementSelectQueryCount();
+        } else {
+            evaluateBunchOfActions();
+        }
     }
 }
