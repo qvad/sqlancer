@@ -2,11 +2,13 @@ package sqlancer.yugabyte.oracle;
 
 import static sqlancer.yugabyte.YugabyteProvider.CREATION_LOCK;
 
+import java.util.Arrays;
+import java.util.List;
+
 import sqlancer.IgnoreMeException;
 import sqlancer.Main;
 import sqlancer.MainOptions;
 import sqlancer.SQLConnection;
-import sqlancer.StatementExecutor;
 import sqlancer.common.DBMSCommon;
 import sqlancer.common.oracle.TestOracle;
 import sqlancer.common.query.ExpectedErrors;
@@ -24,6 +26,16 @@ public class YugabyteCatalogOracle implements TestOracle {
     protected final MainOptions options;
     protected final SQLConnection con;
 
+    private final List<YugabyteProvider.Action> dmlActions = Arrays.asList(YugabyteProvider.Action.INSERT,
+            YugabyteProvider.Action.UPDATE, YugabyteProvider.Action.DELETE);
+    private final List<YugabyteProvider.Action> catalogActions = Arrays.asList(YugabyteProvider.Action.CREATE_VIEW,
+            YugabyteProvider.Action.CREATE_SEQUENCE, YugabyteProvider.Action.ALTER_TABLE,
+            YugabyteProvider.Action.SET_CONSTRAINTS, YugabyteProvider.Action.DISCARD,
+            YugabyteProvider.Action.DROP_INDEX, YugabyteProvider.Action.COMMENT_ON, YugabyteProvider.Action.RESET_ROLE,
+            YugabyteProvider.Action.RESET);
+    private final List<YugabyteProvider.Action> diskActions = Arrays.asList(YugabyteProvider.Action.TRUNCATE,
+            YugabyteProvider.Action.VACUUM);
+
     public YugabyteCatalogOracle(YugabyteGlobalState globalState) {
         this.state = globalState;
         this.con = state.getConnection();
@@ -31,6 +43,10 @@ public class YugabyteCatalogOracle implements TestOracle {
         this.options = state.getOptions();
         YugabyteCommon.addCommonExpressionErrors(errors);
         YugabyteCommon.addCommonFetchErrors(errors);
+    }
+
+    private YugabyteProvider.Action getRandomAction(List<YugabyteProvider.Action> actions) {
+        return actions.get(state.getRandomly().getInteger(0, actions.size()));
     }
 
     protected void createTables(YugabyteGlobalState globalState, int numTables) throws Exception {
@@ -55,25 +71,25 @@ public class YugabyteCatalogOracle implements TestOracle {
         }
     }
 
-    private void evaluateBunchOfActions() throws Exception {
-        StatementExecutor<YugabyteGlobalState, YugabyteProvider.Action> se = new StatementExecutor<>(state,
-                YugabyteProvider.Action.values(), YugabyteProvider::mapActions, (q) -> {
-            if (state.getSchema().getDatabaseTables().isEmpty()) {
-                throw new IgnoreMeException();
-            }
-        });
-        se.executeStatements(true);
-        state.executeStatement(new SQLQueryAdapter("COMMIT", true));
-    }
-
     @Override
     public void check() throws Exception {
         // create table or evaluate catalog test
-        if (state.getRandomly().getInteger(1, 100) > 90) {
+        int seed = state.getRandomly().getInteger(1, 100);
+        if (seed > 95) {
             createTables(state, 1);
-            state.getManager().incrementSelectQueryCount();
         } else {
-            evaluateBunchOfActions();
+            YugabyteProvider.Action randomAction;
+
+            if (seed > 40) {
+                randomAction = getRandomAction(dmlActions);
+            } else if (seed > 10) {
+                randomAction = getRandomAction(catalogActions);
+            } else {
+                randomAction = getRandomAction(diskActions);
+            }
+
+            state.executeStatement(randomAction.getQuery(state));
         }
+        state.getManager().incrementSelectQueryCount();
     }
 }
