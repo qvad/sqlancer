@@ -29,6 +29,7 @@ public class YugabyteFuzzer implements TestOracle {
         YugabyteCommon.addCommonExpressionErrors(errors);
         YugabyteCommon.addCommonFetchErrors(errors);
         YugabyteCommon.addGroupingErrors(errors);
+        YugabyteCommon.addViewErrors(errors);
 
         Config config = ConfigFactory.load();
         ArrayList<Object> queriesList = (ArrayList<Object>) config.getList("queries").unwrapped();
