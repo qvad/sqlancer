@@ -21,7 +21,20 @@ import sqlancer.common.query.SQLQueryAdapter;
 import sqlancer.common.query.SQLQueryProvider;
 import sqlancer.common.query.SQLancerResultSet;
 import sqlancer.yugabyte.YugabyteOptions.YugabyteOracleFactory;
-import sqlancer.yugabyte.gen.*;
+import sqlancer.yugabyte.gen.YugabyteAlterTableGenerator;
+import sqlancer.yugabyte.gen.YugabyteCommentGenerator;
+import sqlancer.yugabyte.gen.YugabyteDeleteGenerator;
+import sqlancer.yugabyte.gen.YugabyteDiscardGenerator;
+import sqlancer.yugabyte.gen.YugabyteDropIndexGenerator;
+import sqlancer.yugabyte.gen.YugabyteInsertGenerator;
+import sqlancer.yugabyte.gen.YugabyteNotifyGenerator;
+import sqlancer.yugabyte.gen.YugabyteSequenceGenerator;
+import sqlancer.yugabyte.gen.YugabyteTableGenerator;
+import sqlancer.yugabyte.gen.YugabyteTransactionGenerator;
+import sqlancer.yugabyte.gen.YugabyteTruncateGenerator;
+import sqlancer.yugabyte.gen.YugabyteUpdateGenerator;
+import sqlancer.yugabyte.gen.YugabyteVacuumGenerator;
+import sqlancer.yugabyte.gen.YugabyteViewGenerator;
 
 // EXISTS
 // IN
@@ -293,7 +306,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         UPDATE(YugabyteUpdateGenerator::create), //
         TRUNCATE(YugabyteTruncateGenerator::create), //
         VACUUM(YugabyteVacuumGenerator::create), //
-//        SET(YugabyteSetGenerator::create), // TODO insert yugabyte sets
+        // SET(YugabyteSetGenerator::create), // TODO insert yugabyte sets
         SET_CONSTRAINTS((g) -> {
             String sb = "SET CONSTRAINTS ALL " + Randomly.fromOptions("DEFERRED", "IMMEDIATE");
             return new SQLQueryAdapter(sb);
