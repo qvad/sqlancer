@@ -13,7 +13,8 @@ import sqlancer.OracleFactory;
 import sqlancer.common.oracle.CompositeTestOracle;
 import sqlancer.common.oracle.TestOracle;
 import sqlancer.yugabyte.YugabyteOptions.YugabyteOracleFactory;
-import sqlancer.yugabyte.oracle.YugabyteCatalogOracle;
+import sqlancer.yugabyte.oracle.YugabyteCatalog;
+import sqlancer.yugabyte.oracle.YugabyteFuzzer;
 import sqlancer.yugabyte.oracle.YugabyteNoRECOracle;
 import sqlancer.yugabyte.oracle.YugabytePivotedQuerySynthesisOracle;
 import sqlancer.yugabyte.oracle.tlp.YugabyteTLPAggregateOracle;
@@ -45,10 +46,16 @@ public class YugabyteOptions implements DBMSSpecificOptions<YugabyteOracleFactor
     }
 
     public enum YugabyteOracleFactory implements OracleFactory<YugabyteGlobalState> {
+        FUZZER {
+            @Override
+            public TestOracle create(YugabyteGlobalState globalState) throws SQLException {
+                return new YugabyteFuzzer(globalState);
+            }
+        },
         CATALOG {
             @Override
             public TestOracle create(YugabyteGlobalState globalState) throws SQLException {
-                return new YugabyteCatalogOracle(globalState);
+                return new YugabyteCatalog(globalState);
             }
         },
         NOREC {

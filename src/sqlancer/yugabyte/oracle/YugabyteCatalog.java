@@ -18,7 +18,7 @@ import sqlancer.yugabyte.YugabyteProvider;
 import sqlancer.yugabyte.gen.YugabyteCommon;
 import sqlancer.yugabyte.gen.YugabyteTableGenerator;
 
-public class YugabyteCatalogOracle implements TestOracle {
+public class YugabyteCatalog implements TestOracle {
     protected final YugabyteGlobalState state;
 
     protected final ExpectedErrors errors = new ExpectedErrors();
@@ -36,7 +36,7 @@ public class YugabyteCatalogOracle implements TestOracle {
     private final List<YugabyteProvider.Action> diskActions = Arrays.asList(YugabyteProvider.Action.TRUNCATE,
             YugabyteProvider.Action.VACUUM);
 
-    public YugabyteCatalogOracle(YugabyteGlobalState globalState) {
+    public YugabyteCatalog(YugabyteGlobalState globalState) {
         this.state = globalState;
         this.con = state.getConnection();
         this.logger = state.getLogger();
