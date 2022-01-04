@@ -276,6 +276,11 @@
       <artifactId>arangodb-java-driver</artifactId>
       <version>6.9.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>1.4.1</version>
+    </dependency>
   </dependencies>
   <reporting>
     <plugins>

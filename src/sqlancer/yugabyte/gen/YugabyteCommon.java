@@ -39,7 +39,7 @@ public final class YugabyteCommon {
 
         errors.add("canceling statement due to statement timeout");
 
-        errors.add("non-integer constant in GROUP BY");
+        errors.add("non-integer constant in");
         errors.add("must appear in the GROUP BY clause or be used in an aggregate function");
         errors.add("GROUP BY position");
     }
