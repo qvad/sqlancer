@@ -56,6 +56,9 @@ public class YugabyteFuzzer implements TestOracle {
             if (testQueries.isEmpty()) {
                 System.out.println("No configuration found. Using just random select statements");
                 testQueries.add(new SelectQuery());
+                testQueries.add(new ActionQuery(YugabyteProvider.Action.UPDATE));
+                testQueries.add(new ActionQuery(YugabyteProvider.Action.DELETE));
+                testQueries.add(new ActionQuery(YugabyteProvider.Action.INSERT));
             }
         }
     }
