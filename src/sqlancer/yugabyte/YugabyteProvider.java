@@ -271,10 +271,14 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE DATABASE ").append(databaseName).append(" ");
         if (Randomly.getBoolean() && state.getDbmsSpecificOptions().testCollations) {
+            sb.append("WITH ");
             if (Randomly.getBoolean()) {
-                sb.append("WITH ENCODING '");
+                sb.append("ENCODING '");
                 sb.append(Randomly.fromOptions("utf8"));
                 sb.append("' ");
+            }
+            if (Randomly.getBoolean()) {
+                sb.append("COLLATED = true ");
             }
             for (String lc : Arrays.asList("LC_COLLATE", "LC_CTYPE")) {
                 if (!state.getCollates().isEmpty() && Randomly.getBoolean()) {
@@ -282,6 +286,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
                 }
             }
             sb.append(" TEMPLATE template0");
+
         }
         return sb.toString();
     }

@@ -24,7 +24,7 @@ public enum YugabyteFunctionWithUnknownResult {
 
     // https://www.postgresql.org/docs/devel/functions-info.html#FUNCTIONS-INFO-SESSION-TABLE
     CURRENT_DATABASE("current_database", YugabyteDataType.TEXT), // name
-    CURRENT_QUERY("current_query", YugabyteDataType.TEXT), // can generate false positives
+    // CURRENT_QUERY("current_query", YugabyteDataType.TEXT), // can generate false positives
     CURRENT_SCHEMA("current_schema", YugabyteDataType.TEXT), // name
     // CURRENT_SCHEMAS("current_schemas", YugabyteDataType.TEXT, YugabyteDataType.BOOLEAN),
     INET_CLIENT_PORT("inet_client_port", YugabyteDataType.INT),

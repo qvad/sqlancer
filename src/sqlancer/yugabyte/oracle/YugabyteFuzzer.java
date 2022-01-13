@@ -34,6 +34,12 @@ public class YugabyteFuzzer implements TestOracle {
         // remove timeout error from scope
         errors.add("canceling statement due to statement timeout");
 
+        // exclude nemesis exceptions
+        errors.add("terminating connection due to administrator command");
+        errors.add("Java heap space");
+        errors.add("Connection refused");
+        errors.add("Connection to");
+
         // get config from -Dconfig.file="path/to/fuzzer.conf"
         testQueries = new ArrayList<>();
         try {
