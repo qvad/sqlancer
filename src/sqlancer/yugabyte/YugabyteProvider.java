@@ -270,14 +270,14 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
     private String getCreateDatabaseCommand(YugabyteGlobalState state) {
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE DATABASE ").append(databaseName).append(" ");
-        if (true) {
+        if (Randomly.getBoolean() && state.getDbmsSpecificOptions().testCollations) {
             sb.append("WITH ");
             if (Randomly.getBoolean()) {
                 sb.append("ENCODING '");
                 sb.append(Randomly.fromOptions("utf8"));
                 sb.append("' ");
             }
-            if (true) {
+            if (Randomly.getBoolean()) {
                 sb.append("COLOCATED = true ");
             }
             for (String lc : Arrays.asList("LC_COLLATE", "LC_CTYPE")) {
