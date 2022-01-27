@@ -184,7 +184,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
     private void createDatabaseSync(YugabyteGlobalState globalState, String entryDatabaseName) throws SQLException {
         synchronized (CREATION_LOCK) {
             try {
-                Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 5000));
+                Thread.sleep(ThreadLocalRandom.current().nextInt(500, 2000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -238,7 +238,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         synchronized (CREATION_LOCK) {
             while (globalState.getSchema().getDatabaseTables().size() < numTables) {
                 try {
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 5000));
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(500, 2000));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -264,7 +264,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
                 });
         se.executeStatements();
         globalState.executeStatement(new SQLQueryAdapter("COMMIT", true));
-        globalState.executeStatement(new SQLQueryAdapter("SET SESSION statement_timeout = 5000;\n"));
+        globalState.executeStatement(new SQLQueryAdapter("SET SESSION statement_timeout = 15000;\n"));
     }
 
     private String getCreateDatabaseCommand(YugabyteGlobalState state) {

@@ -49,6 +49,8 @@ public class YugabyteTableGenerator {
         errors.add("but default expression is of type text");
         errors.add("has pseudo-type unknown");
         errors.add("no collation was derived for partition key column");
+        errors.add("cannot set colocated true on a non-colocated database");
+        errors.add("Cannot split table that does not have primary key");
         errors.add("inherits from generated column but specifies identity");
         errors.add("inherits from generated column but specifies default");
         YugabyteCommon.addCommonExpressionErrors(errors);
@@ -97,11 +99,12 @@ public class YugabyteTableGenerator {
             errors.add("unsupported ON COMMIT and foreign key combination");
             errors.add("ERROR: invalid ON DELETE action for foreign key constraint containing generated column");
             errors.add("exclusion constraints are not supported on partitioned tables");
+            errors.add("option is not yet supported for hash partitioned tables");
             YugabyteCommon.addTableConstraints(columnHasPrimaryKey, sb, table, globalState, errors);
         }
         sb.append(")");
         generatePartitionBy();
-        // YugabyteCommon.generateWith(sb, globalState, errors);
+        YugabyteCommon.generateWith(sb, globalState, errors, columnsToBeAdded, isTemporaryTable);
         if (Randomly.getBoolean() && isTemporaryTable) {
             sb.append(" ON COMMIT ");
             // todo ON COMMIT DROP fails and it's known issue

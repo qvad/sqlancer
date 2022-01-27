@@ -17,6 +17,7 @@ import sqlancer.yugabyte.YugabyteSchema.YugabyteColumn;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteDataType;
 import sqlancer.yugabyte.YugabyteSchema.YugabyteTable;
 import sqlancer.yugabyte.YugabyteVisitor;
+import sqlancer.yugabyte.ast.YugabyteConstant;
 
 public final class YugabyteCommon {
 
@@ -209,24 +210,75 @@ public final class YugabyteCommon {
         return serial;
     }
 
-    public static void generateWith(StringBuilder sb, YugabyteGlobalState globalState, ExpectedErrors errors) {
+    public static void generateWith(StringBuilder sb, YugabyteGlobalState globalState, ExpectedErrors errors,
+            List<YugabyteColumn> columnsToBeAdded, boolean isTemporaryTable) {
         if (Randomly.getBoolean()) {
-            sb.append(" WITH (");
-            ArrayList<StorageParameters> values = new ArrayList<>(Arrays.asList(StorageParameters.values()));
-            values.remove(StorageParameters.OIDS);
-            errors.add("unrecognized parameter");
-            errors.add("ALTER TABLE / ADD CONSTRAINT USING INDEX is not supported on partitioned tables");
-            List<StorageParameters> subset = Randomly.nonEmptySubset(values);
-            int i = 0;
-            for (StorageParameters parameter : subset) {
-                if (i++ != 0) {
-                    sb.append(", ");
+            if (Randomly.getBoolean()) {
+                sb.append(" WITH (");
+                ArrayList<StorageParameters> values = new ArrayList<>(Arrays.asList(StorageParameters.values()));
+                errors.add("unrecognized parameter");
+                errors.add("ALTER TABLE / ADD CONSTRAINT USING INDEX is not supported on partitioned tables");
+                List<StorageParameters> subset = Randomly.nonEmptySubset(values);
+                int i = 0;
+                for (StorageParameters parameter : subset) {
+                    if (i++ != 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(parameter.parameter);
+                    sb.append("=");
+                    sb.append(parameter.op.apply(globalState.getRandomly()));
                 }
-                sb.append(parameter.parameter);
-                sb.append("=");
-                sb.append(parameter.op.apply(globalState.getRandomly()));
+                sb.append(")");
+            } else {
+                sb.append(" WITHOUT OIDS ");
             }
-            sb.append(")");
+        } else if (Randomly.getBoolean() && !isTemporaryTable) {
+            if (Randomly.getBoolean()) {
+                sb.append(" SPLIT INTO ");
+                sb.append(Randomly.smallNumber() + 1);
+                sb.append(" TABLETS ");
+                errors.add("columns must be present to split by number of tablets");
+                errors.add("option is not yet supported for hash partitioned tables");
+            } else {
+                sb.append(" SPLIT AT VALUES (");
+
+                int splits = Randomly.smallNumber() + 2;
+                for (int i = 1; i <= splits; i++) {
+                    long start = Randomly.smallNumber();
+                    int size = columnsToBeAdded.size();
+                    int counter = 1;
+                    for (YugabyteColumn c : columnsToBeAdded) {
+                        sb.append("(");
+                        switch (c.getType()) {
+                        case INT:
+                        case REAL:
+                            sb.append(YugabyteConstant.createDoubleConstant(start));
+                        case FLOAT:
+                            sb.append(YugabyteConstant.createIntConstant(start));
+                            break;
+                        case BOOLEAN:
+                            sb.append(YugabyteConstant.createBooleanConstant(Randomly.getBoolean()));
+                            break;
+                        case TEXT:
+                            sb.append(YugabyteConstant.createTextConstant(String.valueOf(start)));
+                            break;
+                        default:
+                            throw new IgnoreMeException();
+                        }
+                        sb.append(")");
+                        counter++;
+                        start += Randomly.smallNumber() + 1;
+                        if (counter <= size) {
+                            sb.append(",");
+                        }
+                    }
+
+                    if (i < splits) {
+                        sb.append(",");
+                    }
+                }
+                sb.append(")");
+            }
         }
     }
 
@@ -353,22 +405,7 @@ public final class YugabyteCommon {
     }
 
     private enum StorageParameters {
-        FILLFACTOR("fillfactor", (r) -> r.getInteger(10, 100)),
-        // toast_tuple_target
-        // PARALLEL_WORKERS("parallel_workers", (r) -> r.getInteger(0, 1024)),
-        AUTOVACUUM_ENABLED("autovacuum_enabled", (r) -> Randomly.fromOptions(0, 1)),
-        // AUTOVACUUM_VACUUM_THRESHOLD("autovacuum_vacuum_threshold", (r) -> r.getInteger(0, 2147483647)),
-        OIDS("oids", (r) -> Randomly.fromOptions(0, 1)),
-        // AUTOVACUUM_VACUUM_SCALE_FACTOR("autovacuum_vacuum_scale_factor",
-        // (r) -> Randomly.fromOptions(0, 0.00001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 1)),
-        AUTOVACUUM_ANALYZE_THRESHOLD("autovacuum_analyze_threshold", (r) -> r.getLong(0, Integer.MAX_VALUE)),
-        AUTOVACUUM_ANALYZE_SCALE_FACTOR("autovacuum_analyze_scale_factor",
-                (r) -> Randomly.fromOptions(0, 0.00001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 1)),
-        AUTOVACUUM_VACUUM_COST_DELAY("autovacuum_vacuum_cost_delay", (r) -> r.getLong(0, 100)),
-        // AUTOVACUUM_VACUUM_COST_LIMIT("autovacuum_vacuum_cost_limit", (r) -> r.getLong(1, 10000)),
-        // AUTOVACUUM_FREEZE_MIN_AGE("autovacuum_freeze_min_age", (r) -> r.getLong(0, 1000000000)),
-        AUTOVACUUM_FREEZE_MAX_AGE("autovacuum_freeze_max_age", (r) -> r.getLong(100000, 2000000000)),
-        AUTOVACUUM_FREEZE_TABLE_AGE("autovacuum_freeze_table_age", (r) -> r.getLong(0, 2000000000));
+        COLOCATED("colocated", (r) -> Randomly.getBoolean());
         // TODO
 
         private final String parameter;

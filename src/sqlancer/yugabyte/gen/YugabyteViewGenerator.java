@@ -16,11 +16,11 @@ public final class YugabyteViewGenerator {
     public static SQLQueryAdapter create(YugabyteGlobalState globalState) {
         ExpectedErrors errors = new ExpectedErrors();
         StringBuilder sb = new StringBuilder("CREATE");
-        boolean materialized;
-        boolean recursive = false;
+        // boolean materialized;
+        // boolean recursive = false;
         if (Randomly.getBoolean()) {
             sb.append(" MATERIALIZED");
-            materialized = true;
+            // materialized = true;
         } else {
             if (Randomly.getBoolean()) {
                 sb.append(" OR REPLACE");
@@ -28,11 +28,11 @@ public final class YugabyteViewGenerator {
             if (Randomly.getBoolean()) {
                 sb.append(Randomly.fromOptions(" TEMP", " TEMPORARY"));
             }
-//            if (Randomly.getBoolean()) {
-//                sb.append(" RECURSIVE");
-//                recursive = true;
-//            }
-            materialized = false;
+            // if (Randomly.getBoolean()) {
+            // sb.append(" RECURSIVE");
+            // recursive = true;
+            // }
+            // materialized = false;
         }
         sb.append(" VIEW ");
         int i = 0;
@@ -54,12 +54,12 @@ public final class YugabyteViewGenerator {
             sb.append(DBMSCommon.createColumnName(i));
         }
         sb.append(")");
-//        if (Randomly.getBoolean() && !materialized && !recursive) {
-//            sb.append(" WITH ");
-//            sb.append(Randomly.fromOptions("CASCADED", "LOCAL"));
-//            sb.append(" CHECK OPTION");
-//            errors.add("WITH CHECK OPTION is supported only on automatically updatable views");
-//        }
+        // if (Randomly.getBoolean() && !materialized && !recursive) {
+        // sb.append(" WITH ");
+        // sb.append(Randomly.fromOptions("CASCADED", "LOCAL"));
+        // sb.append(" CHECK OPTION");
+        // errors.add("WITH CHECK OPTION is supported only on automatically updatable views");
+        // }
         sb.append(" AS (");
         YugabyteSelect select = YugabyteRandomQueryGenerator.createRandomQuery(nrColumns, globalState);
         sb.append(YugabyteVisitor.asString(select));
