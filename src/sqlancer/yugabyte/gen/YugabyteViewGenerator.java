@@ -54,12 +54,12 @@ public final class YugabyteViewGenerator {
             sb.append(DBMSCommon.createColumnName(i));
         }
         sb.append(")");
-        if (Randomly.getBoolean() && !materialized && !recursive) {
-            sb.append(" WITH ");
-            sb.append(Randomly.fromOptions("CASCADED", "LOCAL"));
-            sb.append(" CHECK OPTION");
-            errors.add("WITH CHECK OPTION is supported only on automatically updatable views");
-        }
+//        if (Randomly.getBoolean() && !materialized && !recursive) {
+//            sb.append(" WITH ");
+//            sb.append(Randomly.fromOptions("CASCADED", "LOCAL"));
+//            sb.append(" CHECK OPTION");
+//            errors.add("WITH CHECK OPTION is supported only on automatically updatable views");
+//        }
         sb.append(" AS (");
         YugabyteSelect select = YugabyteRandomQueryGenerator.createRandomQuery(nrColumns, globalState);
         sb.append(YugabyteVisitor.asString(select));
