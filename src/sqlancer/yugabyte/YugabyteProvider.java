@@ -7,7 +7,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
 
 import sqlancer.AbstractAction;
 import sqlancer.IgnoreMeException;
@@ -184,7 +183,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
     private void createDatabaseSync(YugabyteGlobalState globalState, String entryDatabaseName) throws SQLException {
         synchronized (CREATION_LOCK) {
             try {
-                Thread.sleep(ThreadLocalRandom.current().nextInt(500, 2000));
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -237,11 +236,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
     protected void createTables(YugabyteGlobalState globalState, int numTables) throws Exception {
         synchronized (CREATION_LOCK) {
             while (globalState.getSchema().getDatabaseTables().size() < numTables) {
-                try {
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(500, 2000));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                Thread.sleep(2000);
 
                 try {
                     String tableName = DBMSCommon.createTableName(globalState.getSchema().getDatabaseTables().size());
