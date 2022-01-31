@@ -72,7 +72,8 @@ public enum YugabyteFunctionWithUnknownResult {
     QUOTE_IDENT("quote_ident", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     REGEX_REPLACE("regexp_replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT,
             YugabyteDataType.TEXT),
-    REPEAT("repeat", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.INT),
+    // todo mute repeat function because it may provide OOMs
+    // REPEAT("repeat", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.INT),
     REPLACE("replace", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     REVERSE("reverse", YugabyteDataType.TEXT, YugabyteDataType.TEXT),
     RIGHT("right", YugabyteDataType.TEXT, YugabyteDataType.TEXT, YugabyteDataType.INT),
