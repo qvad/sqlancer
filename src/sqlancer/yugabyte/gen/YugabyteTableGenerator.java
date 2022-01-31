@@ -65,7 +65,7 @@ public class YugabyteTableGenerator {
     private SQLQueryAdapter generate() {
         columnCanHavePrimaryKey = true;
         sb.append("CREATE");
-        if (Randomly.getBoolean()) {
+        if (Randomly.getBooleanWithSmallProbability()) {
             sb.append(" ");
             isTemporaryTable = true;
             sb.append(Randomly.fromOptions("TEMPORARY", "TEMP"));
