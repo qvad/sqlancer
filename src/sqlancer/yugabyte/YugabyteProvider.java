@@ -8,7 +8,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 
+import com.google.auto.service.AutoService;
+
 import sqlancer.AbstractAction;
+import sqlancer.DatabaseProvider;
 import sqlancer.IgnoreMeException;
 import sqlancer.MainOptions;
 import sqlancer.Randomly;
@@ -37,8 +40,7 @@ import sqlancer.yugabyte.gen.YugabyteUpdateGenerator;
 import sqlancer.yugabyte.gen.YugabyteVacuumGenerator;
 import sqlancer.yugabyte.gen.YugabyteViewGenerator;
 
-// EXISTS
-// IN
+@AutoService(DatabaseProvider.class)
 public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, YugabyteOptions> {
 
     public static final Object CREATION_LOCK = new Object();

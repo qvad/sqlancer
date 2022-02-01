@@ -46,8 +46,8 @@ public class YugabyteFuzzer implements TestOracle {
             Config config = ConfigFactory.load();
             ArrayList<Object> queriesList = (ArrayList<Object>) config.getList("queries").unwrapped();
             for (Object configValue : queriesList) {
-                String type = ((String) ((Map) configValue).get("type")).toUpperCase(Locale.ROOT);
-                Integer weight = (Integer) ((Map) configValue).get("weight");
+                String type = ((String) ((Map<?, ?>) configValue).get("type")).toUpperCase(Locale.ROOT);
+                Integer weight = (Integer) ((Map<?, ?>) configValue).get("weight");
 
                 Query query = type.equalsIgnoreCase("SELECT") ? new SelectQuery()
                         : new ActionQuery(YugabyteProvider.Action.valueOf(type));
