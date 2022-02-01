@@ -109,14 +109,11 @@ public final class YugabyteIndexGenerator {
         errors.add("already contains data"); // CONCURRENT INDEX failed
         errors.add("You might need to add explicit type casts");
         errors.add("INDEX on column of type");
-        errors.add("index method \"gist\" not supported yet");
         errors.add("collations are not supported"); // TODO check
         errors.add("because it has pending trigger events");
-        errors.add("could not determine which collation to use for index expression");
-        errors.add("could not determine which collation to use for string comparison");
+        errors.add("duplicate key value violates unique constraint");
+        errors.add("could not determine which collation to use for");
         errors.add("is duplicated");
-        errors.add("access method \"gin\" does not support unique indexes");
-        errors.add("access method \"hash\" does not support unique indexes");
         errors.add("already exists");
         errors.add("could not create unique index");
         errors.add("has no default operator class");
