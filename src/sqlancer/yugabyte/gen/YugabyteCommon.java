@@ -237,14 +237,17 @@ public final class YugabyteCommon {
                 sb.append(" SPLIT INTO ");
                 sb.append(Randomly.smallNumber() + 1);
                 sb.append(" TABLETS ");
+
                 errors.add("columns must be present to split by number of tablets");
                 errors.add("option is not yet supported for hash partitioned tables");
             } else {
                 sb.append(" SPLIT AT VALUES (");
 
+                errors.add("SPLIT AT option is not yet supported for hash partitioned tables");
+
                 int splits = Randomly.smallNumber() + 2;
+                long start = Randomly.smallNumber();
                 for (int i = 1; i <= splits; i++) {
-                    long start = Randomly.smallNumber();
                     int size = columnsToBeAdded.size();
                     int counter = 1;
                     for (YugabyteColumn c : columnsToBeAdded) {

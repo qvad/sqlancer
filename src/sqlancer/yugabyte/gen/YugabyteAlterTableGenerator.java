@@ -130,10 +130,11 @@ public class YugabyteAlterTableGenerator {
                 sb.append("ADD ");
                 sb.append("CONSTRAINT " + r.getAlphabeticChar() + " ");
                 sb.append(Randomly.fromOptions("UNIQUE", "PRIMARY KEY"));
-                errors.add("already exists");
-                errors.add("not valid");
                 sb.append(" USING INDEX ");
                 sb.append(randomTable.getRandomIndex().getIndexName());
+                errors.add("already exists");
+                errors.add("PRIMARY KEY containing column of type");
+                errors.add("not valid");
                 errors.add("is not a unique index");
                 errors.add("is already associated with a constraint");
                 errors.add("Cannot create a primary key or unique constraint using such an index");

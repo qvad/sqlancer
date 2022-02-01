@@ -25,9 +25,11 @@ import sqlancer.yugabyte.gen.YugabyteCommentGenerator;
 import sqlancer.yugabyte.gen.YugabyteDeleteGenerator;
 import sqlancer.yugabyte.gen.YugabyteDiscardGenerator;
 import sqlancer.yugabyte.gen.YugabyteDropIndexGenerator;
+import sqlancer.yugabyte.gen.YugabyteIndexGenerator;
 import sqlancer.yugabyte.gen.YugabyteInsertGenerator;
 import sqlancer.yugabyte.gen.YugabyteNotifyGenerator;
 import sqlancer.yugabyte.gen.YugabyteSequenceGenerator;
+import sqlancer.yugabyte.gen.YugabyteSetGenerator;
 import sqlancer.yugabyte.gen.YugabyteTableGenerator;
 import sqlancer.yugabyte.gen.YugabyteTransactionGenerator;
 import sqlancer.yugabyte.gen.YugabyteTruncateGenerator;
@@ -66,6 +68,9 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         Randomly r = globalState.getRandomly();
         int nrPerformed;
         switch (a) {
+        case CREATE_INDEX:
+            nrPerformed = r.getInteger(0, 3);
+            break;
         case DISCARD:
         case DROP_INDEX:
             nrPerformed = r.getInteger(0, 5);
@@ -83,6 +88,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         case RESET_ROLE:
         case VACUUM:
         case SET_CONSTRAINTS:
+        case SET:
         case COMMENT_ON:
         case NOTIFY:
         case LISTEN:
@@ -302,11 +308,12 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         DELETE(YugabyteDeleteGenerator::create), //
         DISCARD(YugabyteDiscardGenerator::create), //
         DROP_INDEX(YugabyteDropIndexGenerator::create), //
+        CREATE_INDEX(YugabyteIndexGenerator::generate), //
         INSERT(YugabyteInsertGenerator::insert), //
         UPDATE(YugabyteUpdateGenerator::create), //
         TRUNCATE(YugabyteTruncateGenerator::create), //
         VACUUM(YugabyteVacuumGenerator::create), //
-        // SET(YugabyteSetGenerator::create), // TODO insert yugabyte sets
+        SET(YugabyteSetGenerator::create), // TODO insert yugabyte sets
         SET_CONSTRAINTS((g) -> {
             String sb = "SET CONSTRAINTS ALL " + Randomly.fromOptions("DEFERRED", "IMMEDIATE");
             return new SQLQueryAdapter(sb);

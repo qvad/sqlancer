@@ -108,7 +108,9 @@ public final class YugabyteIndexGenerator {
         }
         errors.add("already contains data"); // CONCURRENT INDEX failed
         errors.add("You might need to add explicit type casts");
-        errors.add(" collations are not supported"); // TODO check
+        errors.add("INDEX on column of type");
+        errors.add("index method \"gist\" not supported yet");
+        errors.add("collations are not supported"); // TODO check
         errors.add("because it has pending trigger events");
         errors.add("could not determine which collation to use for index expression");
         errors.add("could not determine which collation to use for string comparison");
