@@ -245,8 +245,17 @@ public final class YugabyteCommon {
 
                 errors.add("SPLIT AT option is not yet supported for hash partitioned tables");
 
-                int splits = Randomly.smallNumber() + 2;
+                boolean hasBoolean = false;
+                for (YugabyteColumn column: columnsToBeAdded) {
+                    if (column.getType().equals(YugabyteDataType.BOOLEAN)) {
+                        hasBoolean = true;
+                        break;
+                    }
+                }
+
+                int splits = hasBoolean ? 2 : Randomly.smallNumber() + 2;
                 long start = Randomly.smallNumber();
+                boolean[] bools = new boolean[] {true, false};
                 for (int i = 1; i <= splits; i++) {
                     int size = columnsToBeAdded.size();
                     int counter = 1;
@@ -260,7 +269,7 @@ public final class YugabyteCommon {
                             sb.append(YugabyteConstant.createIntConstant(start));
                             break;
                         case BOOLEAN:
-                            sb.append(YugabyteConstant.createBooleanConstant(Randomly.getBoolean()));
+                            sb.append(YugabyteConstant.createBooleanConstant(bools[i - 1]));
                             break;
                         case TEXT:
                             sb.append(YugabyteConstant.createTextConstant(String.valueOf(start)));
