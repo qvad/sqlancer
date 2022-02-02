@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.function.Function;
 
 import sqlancer.Randomly;
+import sqlancer.common.query.ExpectedErrors;
 import sqlancer.common.query.SQLQueryAdapter;
 import sqlancer.yugabyte.YugabyteGlobalState;
 
@@ -30,6 +31,10 @@ public final class YugabyteSetGenerator {
         } else {
             sb.append(option.op.apply(globalState.getRandomly()));
         }
+        // todo avoiding props that are not represented in Yugabyte
+        ExpectedErrors errors = new ExpectedErrors();
+        errors.add("unrecognized configuration parameter");
+
         return new SQLQueryAdapter(sb.toString());
     }
 
