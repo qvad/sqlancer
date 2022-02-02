@@ -244,6 +244,7 @@ public final class YugabyteCommon {
                 sb.append(" SPLIT AT VALUES (");
 
                 errors.add("SPLIT AT option is not yet supported for hash partitioned tables");
+                errors.add("Cannot have duplicate split rows"); // just in case
 
                 boolean hasBoolean = false;
                 for (YugabyteColumn column: columnsToBeAdded) {
