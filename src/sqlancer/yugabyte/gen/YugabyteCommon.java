@@ -256,7 +256,7 @@ public final class YugabyteCommon {
 
                 int splits = hasBoolean ? 2 : Randomly.smallNumber() + 2;
                 long start = Randomly.smallNumber();
-                boolean[] bools = new boolean[] {true, false};
+                boolean[] bools = new boolean[] {false, true};
                 for (int i = 1; i <= splits; i++) {
                     int size = columnsToBeAdded.size();
                     int counter = 1;
