@@ -247,7 +247,7 @@ public final class YugabyteCommon {
                 errors.add("Cannot have duplicate split rows"); // just in case
 
                 boolean hasBoolean = false;
-                for (YugabyteColumn column: columnsToBeAdded) {
+                for (YugabyteColumn column : columnsToBeAdded) {
                     if (column.getType().equals(YugabyteDataType.BOOLEAN)) {
                         hasBoolean = true;
                         break;
@@ -256,7 +256,7 @@ public final class YugabyteCommon {
 
                 int splits = hasBoolean ? 2 : Randomly.smallNumber() + 2;
                 long start = Randomly.smallNumber();
-                boolean[] bools = new boolean[] {false, true};
+                boolean[] bools = { false, true };
                 for (int i = 1; i <= splits; i++) {
                     int size = columnsToBeAdded.size();
                     int counter = 1;

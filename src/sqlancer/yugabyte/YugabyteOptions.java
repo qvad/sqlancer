@@ -37,7 +37,7 @@ public class YugabyteOptions implements DBMSSpecificOptions<YugabyteOracleFactor
     public boolean testCollations = true;
 
     @Parameter(names = "--connection-url", description = "Specifies the URL for connecting to the YSQL server", arity = 1)
-    public String connectionURL = String.format("jdbc:postgresql://%s:%d/yugabyte", YugabyteOptions.DEFAULT_HOST,
+    public String connectionURL = String.format("jdbc:yugabytedb://%s:%d/yugabyte", YugabyteOptions.DEFAULT_HOST,
             YugabyteOptions.DEFAULT_PORT);
 
     @Override

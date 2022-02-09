@@ -167,14 +167,14 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
             if (port == MainOptions.NO_SET_PORT) {
                 port = uri.getPort();
             }
-            entryURL = String.format("jdbc:postgresql://%s:%d/%s", host, port, entryDatabaseName);
+            entryURL = String.format("jdbc:yugabytedb://%s:%d/%s", host, port, entryDatabaseName);
         } catch (URISyntaxException e) {
             throw new AssertionError(e);
         }
 
         createDatabaseSync(globalState, entryDatabaseName);
 
-        int databaseIndex = entryURL.indexOf(entryDatabaseName);
+        int databaseIndex = entryURL.indexOf("/" + entryDatabaseName) + 1;
         String preDatabaseName = entryURL.substring(0, databaseIndex);
         String postDatabaseName = entryURL.substring(databaseIndex + entryDatabaseName.length());
         testURL = preDatabaseName + databaseName + postDatabaseName;
