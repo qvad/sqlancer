@@ -246,7 +246,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
         synchronized (CREATION_LOCK) {
             while (globalState.getSchema().getDatabaseTables().size() < numTables) {
                 try {
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 5000));
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(2000, 5000));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

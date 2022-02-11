@@ -139,9 +139,7 @@ public final class YugabyteSetGenerator {
         JIT("jit", (r) -> Randomly.fromOptions(1, 0)),
         JOIN_COLLAPSE_LIMIT("join_collapse_limit", (r) -> r.getInteger(1, Integer.MAX_VALUE)),
         PARALLEL_LEADER_PARTICIPATION("parallel_leader_participation", (r) -> Randomly.fromOptions(1, 0)),
-        FORCE_PARALLEL_MODE("force_parallel_mode", (r) -> Randomly.fromOptions("off", "on", "regress")),
-        PLAN_CACHE_MODE("plan_cache_mode",
-                (r) -> Randomly.fromOptions("auto", "force_generic_plan", "force_custom_plan"));
+        FORCE_PARALLEL_MODE("force_parallel_mode", (r) -> Randomly.fromOptions("off", "on", "regress"));
 
         private final String optionName;
         private final Function<Randomly, Object> op;
