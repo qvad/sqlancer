@@ -25,6 +25,7 @@ public final class YugabyteCommon {
     }
 
     public static void addCommonFetchErrors(ExpectedErrors errors) {
+        errors.add("An I/O error occurred while sending to the backend");
         errors.add("Conflicts with committed transaction");
 
         errors.add("relation \"t0\" already exists");

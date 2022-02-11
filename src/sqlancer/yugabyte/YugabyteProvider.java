@@ -7,7 +7,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.auto.service.AutoService;
 
@@ -191,11 +190,7 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
     // for some reason yugabyte unable to create few databases simultaneously
     private void createDatabaseSync(YugabyteGlobalState globalState, String entryDatabaseName) throws SQLException {
         synchronized (CREATION_LOCK) {
-            try {
-                Thread.sleep(ThreadLocalRandom.current().nextInt(2000, 5000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            exceptionLessSleep(5000);
 
             Connection con = createConnectionSafely(entryURL, username, password);
             globalState.getState().logStatement(String.format("\\c %s;", entryDatabaseName));
@@ -244,11 +239,10 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
 
     protected void createTables(YugabyteGlobalState globalState, int numTables) throws Exception {
         synchronized (CREATION_LOCK) {
+            boolean prevCreationFailed = false; // small optimization - wait only after failed requests
             while (globalState.getSchema().getDatabaseTables().size() < numTables) {
-                try {
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(2000, 5000));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                if (!prevCreationFailed) {
+                    exceptionLessSleep(5000);
                 }
 
                 try {
@@ -256,10 +250,19 @@ public class YugabyteProvider extends SQLProviderAdapter<YugabyteGlobalState, Yu
                     SQLQueryAdapter createTable = YugabyteTableGenerator.generate(tableName, generateOnlyKnown,
                             globalState);
                     globalState.executeStatement(createTable);
+                    prevCreationFailed = false;
                 } catch (IgnoreMeException e) {
-                    // do nothing
+                    prevCreationFailed = true;
                 }
             }
+        }
+    }
+
+    private void exceptionLessSleep(long timeout) {
+        try {
+            Thread.sleep(timeout);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
