@@ -179,10 +179,12 @@ public final class YugabyteCommon {
             sb.append("DECIMAL");
             break;
         case FLOAT:
-            sb.append("REAL");
-            break;
         case REAL:
-            sb.append("FLOAT");
+            if (Randomly.getBoolean()) {
+                sb.append("REAL");
+            } else {
+                sb.append("FLOAT");
+            }
             break;
         case RANGE:
             sb.append(Randomly.fromOptions("int4range", "int4range")); // , "int8range", "numrange"

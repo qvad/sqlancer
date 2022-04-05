@@ -32,7 +32,7 @@ public class YugabyteBinaryRangeOperation extends BinaryNode<YugabyteExpression>
     }
 
     public enum YugabyteBinaryRangeOperator implements Operator {
-        UNION("*"), INTERSECTION("*"), DIFFERENCE("-");
+        UNION("+"), INTERSECTION("*"), DIFFERENCE("-");
 
         private final String textRepresentation;
 

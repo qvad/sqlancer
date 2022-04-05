@@ -287,13 +287,13 @@ public final class YugabyteToStringVisitor extends ToStringVisitor<YugabyteExpre
             sb.append(Randomly.fromOptions("VARCHAR"));
             break;
         case REAL:
-            sb.append("FLOAT");
+            sb.append("REAL");
             break;
         case DECIMAL:
             sb.append("DECIMAL");
             break;
         case FLOAT:
-            sb.append("REAL");
+            sb.append("FLOAT");
             break;
         case RANGE:
             sb.append("int4range");
