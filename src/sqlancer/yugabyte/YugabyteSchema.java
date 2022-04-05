@@ -172,7 +172,7 @@ public class YugabyteSchema extends AbstractSchema<YugabyteGlobalState, Yugabyte
         // TODO: 23.02.2022 Planned types
         // SMALLINT, INT, BIGINT, NUMERIC, DECIMAL, REAL, DOUBLE_PRECISION, VARCHAR, CHAR, TEXT, DATE, TIME,
         // TIMESTAMP, TIMESTAMPZ, INTERVAL, INTEGER_ARR
-        INT, BOOLEAN, BYTEA, VARCHAR, CHAR, TEXT, DECIMAL, FLOAT, REAL, RANGE, MONEY, BIT, INET;
+        INT, BOOLEAN, BYTEA, TEXT, DECIMAL, FLOAT, REAL, RANGE, MONEY, BIT, INET;
 
         public static YugabyteDataType getRandomType() {
             List<YugabyteDataType> dataTypes = new ArrayList<>(Arrays.asList(values()));
