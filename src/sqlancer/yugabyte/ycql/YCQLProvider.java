@@ -140,7 +140,7 @@ public class YCQLProvider extends SQLProviderAdapter<YCQLGlobalState, YCQLOption
             stmt.execute("CREATE KEYSPACE IF NOT EXISTS " + globalState.getDatabaseName());
         }
 
-        return new SQLConnection(DriverManager.getConnection(String.format(url, globalState.getDatabaseName())));
+        return new SQLConnection(DriverManager.getConnection(String.format(url, host, globalState.getDatabaseName())));
     }
 
     @Override
