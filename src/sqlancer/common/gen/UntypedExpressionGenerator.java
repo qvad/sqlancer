@@ -27,7 +27,7 @@ public abstract class UntypedExpressionGenerator<E, C> implements ExpressionGene
     }
 
     public E generateLeafNode() {
-        if (Randomly.getBoolean() && !columns.isEmpty()) {
+        if (!columns.isEmpty()) {
             return generateColumn();
         } else {
             return generateConstant();
