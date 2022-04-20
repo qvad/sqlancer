@@ -22,7 +22,8 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn package -DskipTests --file pom.xml
-    - run: cd target && tar -cvzf sqlancer.tar.gz sqlancer-2.0.0.jar lib/
+    - run: cd target && mv sqlancer-2.0.0.jar sqlancer-${{ github.event.inputs.sqlancer_version }}.jar && cd ../
+    - run: cd target && tar -cvzf sqlancer.tar.gz sqlancer-${{ github.event.inputs.sqlancer_version }}.jar lib/
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
