@@ -28,6 +28,7 @@ public class YCQLInsertGenerator extends AbstractInsertGenerator<YCQLColumn> {
 
     private SQLQueryAdapter generate() {
         errors.add("Invalid Arguments");
+        errors.add("Invalid SQL Statement");
         errors.add("Invalid CQL Statement");
         errors.add("Datatype Mismatch");
         errors.add("Null Argument for Primary Key");

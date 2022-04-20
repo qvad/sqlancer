@@ -119,8 +119,8 @@ public class YCQLProvider extends SQLProviderAdapter<YCQLGlobalState, YCQLOption
             e.printStackTrace();
         }
         final String host = globalState.getOptions().getHost();
-        final String url = "jdbc:cassandra://%s:9042/%s?localdatacenter=datacenter1";
-        final Connection connection = DriverManager.getConnection(String.format(url, host, "system_schema"));
+        final String url = "jdbc:cassandra://%s:9042/%s?localdatacenter=%s";
+        final Connection connection = DriverManager.getConnection(String.format(url, host, "system_schema", globalState.getDbmsSpecificOptions().datacenter));
 
         try (Statement stmt = connection.createStatement()) {
             try {
@@ -129,7 +129,7 @@ public class YCQLProvider extends SQLProviderAdapter<YCQLGlobalState, YCQLOption
                 // try again
                 List<String> tableNames = getTableNames(
                         new SQLConnection(
-                                DriverManager.getConnection(String.format(url, host, globalState.getDatabaseName()))),
+                                DriverManager.getConnection(String.format(url, host, globalState.getDatabaseName(), globalState.getDbmsSpecificOptions().datacenter))),
                         globalState.getDatabaseName());
                 for (String tableName : tableNames) {
                     stmt.execute("DROP TABLE " + globalState.getDatabaseName() + "." + tableName);
@@ -140,7 +140,7 @@ public class YCQLProvider extends SQLProviderAdapter<YCQLGlobalState, YCQLOption
             stmt.execute("CREATE KEYSPACE IF NOT EXISTS " + globalState.getDatabaseName());
         }
 
-        return new SQLConnection(DriverManager.getConnection(String.format(url, host, globalState.getDatabaseName())));
+        return new SQLConnection(DriverManager.getConnection(String.format(url, host, globalState.getDatabaseName(), globalState.getDbmsSpecificOptions().datacenter)));
     }
 
     @Override

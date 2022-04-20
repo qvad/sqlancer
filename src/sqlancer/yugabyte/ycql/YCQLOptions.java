@@ -26,6 +26,9 @@ public class YCQLOptions implements DBMSSpecificOptions<YCQLOracleFactory> {
     @Parameter(names = "--max-num-updates", description = "The maximum number of UPDATE statements that are issued for a database", arity = 1)
     public int maxNumUpdates = 5;
 
+    @Parameter(names = "--datacenter", description = "YCQL datacenter, can be found in system.local table", arity = 1)
+    public String datacenter = "datacenter1";
+
     @Parameter(names = "--oracle")
     public List<YCQLOracleFactory> oracles = Arrays.asList(YCQLOracleFactory.FUZZER);
 

@@ -25,6 +25,8 @@ public class YCQLFuzzer implements TestOracle {
         this.globalState = globalState;
 
         // remove timeout error from scope
+        errors.add("Query timed out after PT2S");
+        errors.add("Datatype Mismatch");
         errors.add("Invalid CQL Statement");
         errors.add("Invalid SQL Statement");
 

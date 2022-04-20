@@ -34,6 +34,7 @@ public class YCQLTableGenerator {
             sb.append(columns.get(i).getType());
             // todo PK, STATIC
         }
+        errors.add("Query timed out after PT2S");
         errors.add("Invalid type for index");
         List<YCQLColumn> primaryKeyColumns = Randomly.nonEmptySubset(columns);
         sb.append(", PRIMARY KEY(");

@@ -45,6 +45,7 @@ public final class YCQLIndexGenerator {
                     .generateExpression();
             sb.append(YCQLToStringVisitor.asString(expr));
         }
+        errors.add("Query timed out after PT2S");
         errors.add("Invalid SQL Statement");
         errors.add("Invalid CQL Statement");
         errors.add(
