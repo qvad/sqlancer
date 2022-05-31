@@ -30,6 +30,7 @@ public class YSQLAlterTableGenerator {
         YSQLCommon.addCommonInsertUpdateErrors(errors);
         YSQLCommon.addCommonTableErrors(errors);
         errors.add("duplicate key value violates unique constraint");
+        errors.add("cannot drop key column");
         errors.add("cannot drop desired object(s) because other objects depend on them");
         errors.add("invalid input syntax for");
         errors.add("cannot remove a key column");
