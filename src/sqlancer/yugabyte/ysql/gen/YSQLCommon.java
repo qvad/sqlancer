@@ -47,6 +47,8 @@ public final class YSQLCommon {
     }
 
     public static void addCommonTableErrors(ExpectedErrors errors) {
+        errors.add("PRIMARY KEY containing column of type 'INET' not yet supported");
+        errors.add("PRIMARY KEY containing column of type 'VARBIT' not yet supported");
         errors.add("PRIMARY KEY containing column of type 'INT4RANGE' not yet supported");
         errors.add("INDEX on column of type 'INET' not yet supported");
         errors.add("INDEX on column of type 'VARBIT' not yet supported");
@@ -247,6 +249,7 @@ public final class YSQLCommon {
             } else {
                 sb.append(" SPLIT AT VALUES (");
 
+                errors.add("cannot create colocated table with split option");
                 errors.add("SPLIT AT option is not yet supported for hash partitioned tables");
                 errors.add("Cannot have duplicate split rows"); // just in case
 

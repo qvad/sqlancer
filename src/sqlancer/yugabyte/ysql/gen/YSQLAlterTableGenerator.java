@@ -94,6 +94,7 @@ public class YSQLAlterTableGenerator {
                 }
                 errors.add("does not exist");
                 errors.add("cannot drop column");
+                errors.add("cannot drop key column");
                 errors.add("cannot drop inherited column");
                 break;
             case ADD_TABLE_CONSTRAINT:
