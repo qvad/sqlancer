@@ -244,6 +244,7 @@ public final class YSQLCommon {
                 sb.append(Randomly.smallNumber() + 1);
                 sb.append(" TABLETS ");
 
+                errors.add("cannot create colocated table with split option");
                 errors.add("columns must be present to split by number of tablets");
                 errors.add("option is not yet supported for hash partitioned tables");
             } else {
