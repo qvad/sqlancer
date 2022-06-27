@@ -120,7 +120,8 @@ public class YCQLProvider extends SQLProviderAdapter<YCQLGlobalState, YCQLOption
         }
         final String host = globalState.getOptions().getHost();
         final String url = "jdbc:cassandra://%s:9042/%s?localdatacenter=%s";
-        final Connection connection = DriverManager.getConnection(String.format(url, host, "system_schema", globalState.getDbmsSpecificOptions().datacenter));
+        final Connection connection = DriverManager.getConnection(
+                String.format(url, host, "system_schema", globalState.getDbmsSpecificOptions().datacenter));
 
         try (Statement stmt = connection.createStatement()) {
             try {
@@ -128,8 +129,8 @@ public class YCQLProvider extends SQLProviderAdapter<YCQLGlobalState, YCQLOption
             } catch (Exception se) {
                 // try again
                 List<String> tableNames = getTableNames(
-                        new SQLConnection(
-                                DriverManager.getConnection(String.format(url, host, globalState.getDatabaseName(), globalState.getDbmsSpecificOptions().datacenter))),
+                        new SQLConnection(DriverManager.getConnection(String.format(url, host,
+                                globalState.getDatabaseName(), globalState.getDbmsSpecificOptions().datacenter))),
                         globalState.getDatabaseName());
                 for (String tableName : tableNames) {
                     stmt.execute("DROP TABLE " + globalState.getDatabaseName() + "." + tableName);
@@ -140,7 +141,8 @@ public class YCQLProvider extends SQLProviderAdapter<YCQLGlobalState, YCQLOption
             stmt.execute("CREATE KEYSPACE IF NOT EXISTS " + globalState.getDatabaseName());
         }
 
-        return new SQLConnection(DriverManager.getConnection(String.format(url, host, globalState.getDatabaseName(), globalState.getDbmsSpecificOptions().datacenter)));
+        return new SQLConnection(DriverManager.getConnection(String.format(url, host, globalState.getDatabaseName(),
+                globalState.getDbmsSpecificOptions().datacenter)));
     }
 
     @Override

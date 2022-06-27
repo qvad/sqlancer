@@ -172,7 +172,7 @@ public class YSQLSchema extends AbstractSchema<YSQLGlobalState, YSQLTable> {
         // TODO: 23.02.2022 Planned types
         // SMALLINT, INT, BIGINT, NUMERIC, DECIMAL, REAL, DOUBLE_PRECISION, VARCHAR, CHAR, TEXT, DATE, TIME,
         // TIMESTAMP, TIMESTAMPZ, INTERVAL, INTEGER_ARR
-        INT, BOOLEAN, BYTEA, TEXT, DECIMAL, FLOAT, REAL, RANGE, MONEY, BIT, INET, ;
+        INT, BOOLEAN, BYTEA, TEXT, DECIMAL, FLOAT, REAL, RANGE, MONEY, BIT, INET;
 
         public static YSQLDataType getRandomType() {
             List<YSQLDataType> dataTypes = new ArrayList<>(Arrays.asList(values()));

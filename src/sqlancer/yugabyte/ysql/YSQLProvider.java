@@ -1,5 +1,7 @@
 package sqlancer.yugabyte.ysql;
 
+import static java.lang.Thread.sleep;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -43,7 +45,6 @@ import sqlancer.yugabyte.ysql.gen.YSQLViewGenerator;
 @AutoService(DatabaseProvider.class)
 public class YSQLProvider extends SQLProviderAdapter<YSQLGlobalState, YSQLOptions> {
 
-    public static final Object CREATION_LOCK = new Object();
     /**
      * Generate only data types and expressions that are understood by PQS.
      */
@@ -189,21 +190,37 @@ public class YSQLProvider extends SQLProviderAdapter<YSQLGlobalState, YSQLOption
 
     // for some reason yugabyte unable to create few databases simultaneously
     private void createDatabaseSync(YSQLGlobalState globalState, String entryDatabaseName) throws SQLException {
-        synchronized (CREATION_LOCK) {
-            exceptionLessSleep(5000);
+        exceptionLessSleep(5000);
 
-            Connection con = createConnectionSafely(entryURL, username, password);
-            globalState.getState().logStatement(String.format("\\c %s;", entryDatabaseName));
-            globalState.getState().logStatement("DROP DATABASE IF EXISTS " + databaseName);
-            createDatabaseCommand = getCreateDatabaseCommand(globalState);
-            globalState.getState().logStatement(createDatabaseCommand);
+        Connection con = createConnectionSafely(entryURL, username, password);
+        globalState.getState().logStatement(String.format("\\c %s;", entryDatabaseName));
+        globalState.getState().logStatement("DROP DATABASE IF EXISTS " + databaseName);
+        createDatabaseCommand = getCreateDatabaseCommand(globalState);
+        globalState.getState().logStatement(createDatabaseCommand);
+        executeFiveTries(con, "DROP DATABASE IF EXISTS " + databaseName);
+        executeFiveTries(con, createDatabaseCommand);
+
+        con.close();
+    }
+
+    private void executeFiveTries(Connection con, String sql) throws SQLException {
+        int numRepeats = 0;
+        boolean executedSuccessfully = false;
+        Exception lastException = null;
+        while (numRepeats < 5) {
             try (Statement s = con.createStatement()) {
-                s.execute("DROP DATABASE IF EXISTS " + databaseName);
+                s.execute(sql);
+                executedSuccessfully = true;
+                break;
+            } catch (Exception e) {
+                lastException = e;
+                numRepeats++;
+                exceptionLessSleep(1000);
             }
-            try (Statement s = con.createStatement()) {
-                s.execute(createDatabaseCommand);
-            }
-            con.close();
+        }
+
+        if (!executedSuccessfully) {
+            throw new SQLException(lastException);
         }
     }
 
@@ -238,29 +255,26 @@ public class YSQLProvider extends SQLProviderAdapter<YSQLGlobalState, YSQLOption
     }
 
     protected void createTables(YSQLGlobalState globalState, int numTables) throws Exception {
-        synchronized (CREATION_LOCK) {
-            boolean prevCreationFailed = false; // small optimization - wait only after failed requests
-            while (globalState.getSchema().getDatabaseTables().size() < numTables) {
-                if (!prevCreationFailed) {
-                    exceptionLessSleep(5000);
-                }
+        boolean prevCreationFailed = false; // small optimization - wait only after failed requests
+        while (globalState.getSchema().getDatabaseTables().size() < numTables) {
+            if (!prevCreationFailed) {
+                exceptionLessSleep(5000);
+            }
 
-                try {
-                    String tableName = DBMSCommon.createTableName(globalState.getSchema().getDatabaseTables().size());
-                    SQLQueryAdapter createTable = YSQLTableGenerator.generate(tableName, generateOnlyKnown,
-                            globalState);
-                    globalState.executeStatement(createTable);
-                    prevCreationFailed = false;
-                } catch (IgnoreMeException e) {
-                    prevCreationFailed = true;
-                }
+            try {
+                String tableName = DBMSCommon.createTableName(globalState.getSchema().getDatabaseTables().size());
+                SQLQueryAdapter createTable = YSQLTableGenerator.generate(tableName, generateOnlyKnown, globalState);
+                globalState.executeStatement(createTable);
+                prevCreationFailed = false;
+            } catch (IgnoreMeException e) {
+                prevCreationFailed = true;
             }
         }
     }
 
     private void exceptionLessSleep(long timeout) {
         try {
-            Thread.sleep(timeout);
+            sleep(timeout);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
