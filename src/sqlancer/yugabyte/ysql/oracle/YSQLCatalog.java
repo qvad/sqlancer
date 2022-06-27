@@ -1,7 +1,5 @@
 package sqlancer.yugabyte.ysql.oracle;
 
-import static sqlancer.yugabyte.ysql.YSQLProvider.CREATION_LOCK;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,23 +47,21 @@ public class YSQLCatalog implements TestOracle {
     }
 
     protected void createTables(YSQLGlobalState globalState, int numTables) throws Exception {
-        synchronized (CREATION_LOCK) {
-            while (globalState.getSchema().getDatabaseTables().size() < numTables) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        while (globalState.getSchema().getDatabaseTables().size() < numTables) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-                try {
-                    String tableName = DBMSCommon.createTableName(globalState.getSchema().getDatabaseTables().size());
-                    SQLQueryAdapter createTable = YSQLTableGenerator.generate(tableName, true, globalState);
-                    globalState.executeStatement(createTable);
-                    globalState.getManager().incrementSelectQueryCount();
-                    globalState.executeStatement(new SQLQueryAdapter("COMMIT", true));
-                } catch (IgnoreMeException e) {
-                    // do nothing
-                }
+            try {
+                String tableName = DBMSCommon.createTableName(globalState.getSchema().getDatabaseTables().size());
+                SQLQueryAdapter createTable = YSQLTableGenerator.generate(tableName, true, globalState);
+                globalState.executeStatement(createTable);
+                globalState.getManager().incrementSelectQueryCount();
+                globalState.executeStatement(new SQLQueryAdapter("COMMIT", true));
+            } catch (IgnoreMeException e) {
+                // do nothing
             }
         }
     }
