@@ -48,7 +48,7 @@ public final class DuckDBExpressionGenerator extends UntypedExpressionGenerator<
         if (allowAggregates && Randomly.getBoolean()) {
             DuckDBAggregateFunction aggregate = DuckDBAggregateFunction.getRandom();
             allowAggregates = false;
-            return new NewFunctionNode<>(generateExpressions(depth + 1, aggregate.getNrArgs()), aggregate);
+            return new NewFunctionNode<>(generateExpressions(aggregate.getNrArgs(), depth + 1), aggregate);
         }
         List<Expression> possibleOptions = new ArrayList<>(Arrays.asList(Expression.values()));
         if (!globalState.getDbmsSpecificOptions().testCollate) {
@@ -98,7 +98,8 @@ public final class DuckDBExpressionGenerator extends UntypedExpressionGenerator<
             return new NewBinaryOperatorNode<DuckDBExpression>(generateExpression(depth + 1),
                     generateExpression(depth + 1), DuckDBBinaryArithmeticOperator.getRandom());
         case CAST:
-            return new DuckDBCastOperation(generateExpression(depth + 1), DuckDBCompositeDataType.getRandom());
+            return new DuckDBCastOperation(generateExpression(depth + 1),
+                    DuckDBCompositeDataType.getRandomWithoutNull());
         case FUNC:
             DBFunction func = DBFunction.getRandom();
             return new NewFunctionNode<DuckDBExpression, DBFunction>(generateExpressions(func.getNrArgs()), func);
@@ -107,11 +108,11 @@ public final class DuckDBExpressionGenerator extends UntypedExpressionGenerator<
                     generateExpression(depth + 1), generateExpression(depth + 1), Randomly.getBoolean());
         case IN:
             return new NewInOperatorNode<DuckDBExpression>(generateExpression(depth + 1),
-                    generateExpressions(depth + 1, Randomly.smallNumber() + 1), Randomly.getBoolean());
+                    generateExpressions(Randomly.smallNumber() + 1, depth + 1), Randomly.getBoolean());
         case CASE:
             int nr = Randomly.smallNumber() + 1;
             return new NewCaseOperatorNode<DuckDBExpression>(generateExpression(depth + 1),
-                    generateExpressions(depth + 1, nr), generateExpressions(depth + 1, nr),
+                    generateExpressions(nr, depth + 1), generateExpressions(nr, depth + 1),
                     generateExpression(depth + 1));
         case LIKE_ESCAPE:
             return new NewTernaryNode<DuckDBExpression>(generateExpression(depth + 1), generateExpression(depth + 1),
@@ -132,7 +133,7 @@ public final class DuckDBExpressionGenerator extends UntypedExpressionGenerator<
         if (Randomly.getBooleanWithSmallProbability()) {
             return DuckDBConstant.createNullConstant();
         }
-        DuckDBDataType type = DuckDBDataType.getRandom();
+        DuckDBDataType type = DuckDBDataType.getRandomWithoutNull();
         switch (type) {
         case INT:
             if (!globalState.getDbmsSpecificOptions().testIntConstants) {
@@ -243,6 +244,7 @@ public final class DuckDBExpressionGenerator extends UntypedExpressionGenerator<
         DEGREES(1), //
         RADIANS(1), //
         MOD(2), //
+        XOR(2), //
         // string functions
         LENGTH(1), //
         LOWER(1), //
@@ -379,8 +381,7 @@ public final class DuckDBExpressionGenerator extends UntypedExpressionGenerator<
     }
 
     public enum DuckDBBinaryArithmeticOperator implements Operator {
-        CONCAT("||"), ADD("+"), SUB("-"), MULT("*"), DIV("/"), MOD("%"), AND("&"), OR("|"), XOR("#"), LSHIFT("<<"),
-        RSHIFT(">>");
+        CONCAT("||"), ADD("+"), SUB("-"), MULT("*"), DIV("/"), MOD("%"), AND("&"), OR("|"), LSHIFT("<<"), RSHIFT(">>");
 
         private String textRepr;
 
@@ -400,7 +401,6 @@ public final class DuckDBExpressionGenerator extends UntypedExpressionGenerator<
     }
 
     public enum DuckDBBinaryComparisonOperator implements Operator {
-
         EQUALS("="), GREATER(">"), GREATER_EQUALS(">="), SMALLER("<"), SMALLER_EQUALS("<="), NOT_EQUALS("!="),
         LIKE("LIKE"), NOT_LIKE("NOT LIKE"), SIMILAR_TO("SIMILAR TO"), NOT_SIMILAR_TO("NOT SIMILAR TO"),
         REGEX_POSIX("~"), REGEX_POSIT_NOT("!~");
